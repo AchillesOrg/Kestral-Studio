@@ -1,0 +1,2326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kestral Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a header with three views; Learn is a lesson column beside a sticky workbench (editor, input, output). */
+:root {
+  --bg: #f1f4f9;
+  --surface: #ffffff;
+  --surface-2: #e8edf5;
+  --ink: #141c2b;
+  --ink-2: #485468;
+  --line: #d3dae7;
+  --accent: #b4491f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f8e7dd;
+  --blue: #2456c7;
+  --good: #16764a;
+  --good-soft: #dcf2e5;
+  --bad: #b3261e;
+  --bad-soft: #fce7e5;
+  --ed-bg: #fbfcfe;
+  --ed-gut: #eef2f8;
+  --ed-gut-ink: #77839a;
+  --sel: rgba(36, 86, 199, 0.22);
+  --s-kw: #6a3ccf;
+  --s-str: #11763f;
+  --s-num: #a8500a;
+  --s-com: #66728a;
+  --s-bi: #1b5cbd;
+  --s-fn: #0a6878;
+  --s-op: #485468;
+  --s-i: #a8500a;
+  --head: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1320; --surface: #151c2c; --surface-2: #1d2639; --ink: #e5eaf4; --ink-2: #a2aec2;
+    --line: #2b3652; --accent: #f08a5d; --accent-ink: #1b0f08; --accent-soft: #3a2318;
+    --blue: #7fa4ff; --good: #4cc48b; --good-soft: #13301f; --bad: #ff8b82; --bad-soft: #3b1916;
+    --ed-bg: #0a101b; --ed-gut: #111827; --ed-gut-ink: #6a7690; --sel: rgba(127, 164, 255, 0.3);
+    --s-kw: #b9a0ff; --s-str: #72d6a2; --s-num: #f3b86f; --s-com: #7e8aa3; --s-bi: #86b3ff;
+    --s-fn: #61d1e1; --s-op: #a2aec2; --s-i: #f3b86f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1320; --surface: #151c2c; --surface-2: #1d2639; --ink: #e5eaf4; --ink-2: #a2aec2;
+  --line: #2b3652; --accent: #f08a5d; --accent-ink: #1b0f08; --accent-soft: #3a2318;
+  --blue: #7fa4ff; --good: #4cc48b; --good-soft: #13301f; --bad: #ff8b82; --bad-soft: #3b1916;
+  --ed-bg: #0a101b; --ed-gut: #111827; --ed-gut-ink: #6a7690; --sel: rgba(127, 164, 255, 0.3);
+  --s-kw: #b9a0ff; --s-str: #72d6a2; --s-num: #f3b86f; --s-com: #7e8aa3; --s-bi: #86b3ff;
+  --s-fn: #61d1e1; --s-op: #a2aec2; --s-i: #f3b86f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.6 var(--body);
+  padding-block: 0 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.wrap { max-width: 1320px; margin: 0 auto; }
+
+/* ---------- header ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; color: var(--ink); }
+.brand svg { width: 34px; height: 34px; flex: none; }
+.brand .name { font: 700 24px/1 var(--head); letter-spacing: -0.01em; }
+.brand .tag { font: 500 11px/1 var(--mono); color: var(--ink-2); border: 1px solid var(--line); border-radius: 99px; padding: 4px 8px; }
+.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; }
+.tabs a { text-decoration: none; color: var(--ink-2); padding: 7px 16px; border-radius: 7px; font-weight: 600; font-size: 14px; }
+.tabs a:hover { color: var(--ink); }
+.tabs a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(20, 28, 43, 0.12); }
+.tools { display: flex; align-items: center; gap: 14px; }
+.prog { display: flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.bar { width: 84px; height: 6px; border-radius: 9px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); width: 0; transition: width 0.3s; }
+.iconbtn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.iconbtn:hover { color: var(--ink); border-color: var(--ink-2); }
+.iconbtn svg { width: 16px; height: 16px; }
+
+/* ---------- buttons ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 14px; font-weight: 600; font-size: 14px; cursor: pointer; line-height: 1.2; }
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.good { background: var(--good); border-color: var(--good); color: #fff; }
+:root[data-theme="dark"] .btn.good { color: #08140d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.good { color: #08140d; } }
+.btn.small { padding: 4px 10px; font-size: 12.5px; }
+.btn.ghost { background: transparent; }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+kbd { font: 500 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; color: var(--ink-2); background: var(--surface); }
+
+/* ---------- lesson chips ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.chip { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9px; text-decoration: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 600 14px var(--mono); position: relative; }
+.chip:hover { border-color: var(--ink-2); color: var(--ink); }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); background: var(--surface); }
+.chip.done { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.chip.done::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 9px; background: var(--good); }
+
+/* ---------- learn layout ---------- */
+.learn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.lesson { min-width: 0; }
+.lesson .kicker { font: 600 12px/1 var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; }
+.lesson h2 { font: 700 34px/1.1 var(--head); letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+.lesson .goal { color: var(--ink-2); margin: 0 0 18px; font-size: 16px; }
+.prose { max-width: 68ch; }
+.prose h3 { font: 700 20px/1.25 var(--head); margin: 28px 0 8px; }
+.prose h4 { font: 700 16px/1.3 var(--head); margin: 20px 0 6px; }
+.prose p { margin: 0 0 12px; }
+.prose ul, .prose ol { margin: 0 0 14px; padding-left: 22px; }
+.prose li { margin: 3px 0; }
+.prose code, .inl { font: 500 0.88em var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+.prose blockquote { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--blue); background: var(--surface); border-radius: 0 8px 8px 0; color: var(--ink-2); }
+.prose blockquote p { margin: 0; }
+.prose pre code, .prose pre { background: none; padding: 0; }
+
+figure.code { margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--ed-bg); overflow: hidden; }
+figure.code figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; background: var(--ed-gut); border-bottom: 1px solid var(--line); font: 500 11px var(--mono); color: var(--ed-gut-ink); }
+figure.code figcaption .grow { margin-right: auto; }
+figure.code pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 13.5px/1.6 var(--mono); tab-size: 2; }
+figure.code .out { border-top: 1px dashed var(--line); padding: 10px 14px; background: var(--surface); }
+pre.plain { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); overflow-x: auto; font: 13.5px/1.6 var(--mono); }
+.t-c { color: var(--s-com); font-style: italic; } .t-s { color: var(--s-str); } .t-i { color: var(--s-i); font-weight: 600; }
+.t-n { color: var(--s-num); } .t-k { color: var(--s-kw); font-weight: 600; } .t-l { color: var(--s-num); }
+.t-b { color: var(--s-bi); } .t-f { color: var(--s-fn); font-weight: 600; } .t-o { color: var(--s-op); }
+
+.challenge { border: 1px solid var(--accent); border-radius: 12px; background: var(--surface); padding: 16px 18px 6px; margin: 26px 0 16px; max-width: 68ch; }
+.challenge h3 { margin: 0 0 8px !important; font: 700 12px/1 var(--mono) !important; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+.jump { display: none; margin: 0 0 14px; }
+@media (max-width: 980px) { .jump { display: inline-flex; } }
+.lessonnav { display: flex; justify-content: space-between; gap: 10px; max-width: 68ch; margin-top: 18px; }
+
+/* ---------- workbench ---------- */
+.bench { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+@media (min-width: 981px) and (min-height: 720px) { .bench.sticky { position: sticky; top: 12px; } }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar .sp { margin-left: auto; }
+.hintline { font-size: 12px; color: var(--ink-2); }
+.label { font: 600 11px/1 var(--mono); color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; margin: 2px 0 -2px; display: flex; justify-content: space-between; align-items: center; }
+
+.editor { display: flex; border: 1px solid var(--line); border-radius: 10px; background: var(--ed-bg); overflow: hidden; font: 13.5px/21px var(--mono); }
+.editor:focus-within { border-color: var(--blue); box-shadow: 0 0 0 2px var(--sel); }
+.editor .gut { width: 44px; flex: none; background: var(--ed-gut); color: var(--ed-gut-ink); text-align: right; padding: 12px 9px 0 0; overflow: hidden; user-select: none; border-right: 1px solid var(--line); }
+.editor .gut div { height: 21px; }
+.editor .gut div.err { color: var(--bad); font-weight: 700; background: var(--bad-soft); margin-left: -100px; padding-left: 100px; }
+.editor .stack { position: relative; flex: 1; min-width: 0; }
+.editor pre, .editor textarea { position: absolute; inset: 0; margin: 0; width: 100%; height: 100%; padding: 12px 14px; font: inherit; letter-spacing: 0; white-space: pre; tab-size: 2; border: 0; }
+.editor pre { overflow: hidden; pointer-events: none; color: var(--ink); }
+.editor textarea { background: transparent; color: transparent; caret-color: var(--ink); resize: none; outline: none; overflow: auto; scrollbar-width: none; -webkit-text-fill-color: transparent; }
+.editor textarea::-webkit-scrollbar { display: none; }
+.editor textarea::selection { background: var(--sel); }
+
+textarea.input { width: 100%; min-height: 64px; max-height: 160px; resize: vertical; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; font: 13px/1.5 var(--mono); }
+textarea.input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 2px var(--sel); }
+
+.panel { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 14px; min-height: 52px; }
+.panel pre { margin: 0; font: 13.5px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 190px; overflow: auto; }
+.panel .muted, .muted { color: var(--ink-2); font-size: 13px; }
+.errbox { margin-top: 8px; border-left: 3px solid var(--bad); background: var(--bad-soft); padding: 8px 12px; border-radius: 0 8px 8px 0; }
+.errbox pre { color: var(--bad); max-height: 150px; }
+.status { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.status.ok { color: var(--good); } .status.bad { color: var(--bad); }
+
+.results { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 12px 14px; }
+.results.pass { border-color: var(--good); background: var(--good-soft); }
+.results h4 { margin: 0 0 6px; font: 700 16px var(--head); }
+.results ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; }
+.results li { display: flex; gap: 8px; align-items: baseline; }
+.results li b { font-family: var(--mono); font-size: 12px; min-width: 20px; }
+.results li.ok b { color: var(--good); } .results li.no b { color: var(--bad); }
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.diff div { min-width: 0; }
+.diff .h { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); margin-bottom: 3px; }
+.diff pre { margin: 0; padding: 8px 10px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); font: 12.5px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 130px; overflow: auto; }
+.results .ran { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.results .ran pre { margin: 4px 0 0; padding: 6px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; font: 12.5px/1.5 var(--mono); white-space: pre-wrap; }
+.results .next { margin-top: 12px; }
+
+details.sol { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+details.sol summary { cursor: pointer; padding: 9px 14px; font-weight: 600; font-size: 14px; }
+details.sol .body { padding: 0 14px 12px; }
+details.sol .body p { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); }
+.hintbox { border-left: 3px solid var(--blue); background: var(--surface); padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 14px; }
+.hintbox div { margin: 2px 0; }
+
+/* ---------- playground / reference ---------- */
+.play { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+.play h2, .ref h2 { font: 700 30px/1.1 var(--head); letter-spacing: -0.02em; margin: 0 0 6px; }
+.lead { color: var(--ink-2); margin: 0 0 16px; max-width: 70ch; }
+select.pick { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; font-size: 14px; max-width: 100%; }
+.stackcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.refsearch { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.refsearch input { flex: 1; min-width: 200px; max-width: 420px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; }
+.refgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 14px; margin-bottom: 26px; }
+.refcard { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 14px; min-width: 0; }
+.refcard h3 { margin: 0 0 8px; font: 700 16px var(--head); }
+.refcard pre { margin: 0 0 8px; padding: 10px 12px; background: var(--ed-bg); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; font: 12.5px/1.55 var(--mono); }
+.refcard p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
+.ref h3.group { font: 700 18px var(--head); margin: 22px 0 8px; }
+.fnlist { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.fnrow { display: grid; grid-template-columns: minmax(150px, 280px) 1fr; gap: 6px 16px; padding: 8px 14px; background: var(--surface); }
+.fnrow code { font: 600 13px var(--mono); color: var(--s-fn); overflow-wrap: anywhere; }
+.fnrow span { color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 980px) {
+  .learn, .play { grid-template-columns: minmax(0, 1fr); }
+  .lesson h2 { font-size: 28px; }
+}
+@media (max-width: 560px) {
+  .fnrow { grid-template-columns: minmax(0, 1fr); }
+  .diff { grid-template-columns: minmax(0, 1fr); }
+  .bar { width: 56px; }
+  .tabs { width: 100%; }
+  .tabs a { flex: 1; text-align: center; padding-inline: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#lesson-1" aria-label="Kestral Studio home">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="10" fill="var(--accent)"/>
+        <path d="M7 24 C14 24 20 20 25 12 C26 16 28 19 33 21 C28 21 25 23 24 27 C22 24 19 23 15 25 C19 26 21 29 21 33 C17 29 12 27 7 24 Z" fill="var(--accent-ink)"/>
+      </svg>
+      <span class="name">Kestral</span>
+      <span class="tag">Studio v1.0.0</span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a id="tab-learn" href="#lesson-1">Learn</a>
+      <a id="tab-play" href="#playground">Playground</a>
+      <a id="tab-ref" href="#reference">Reference</a>
+    </nav>
+    <div class="tools">
+      <div class="prog" title="Lessons completed"><span id="progText">0 / 13</span><span class="bar"><i id="progBar"></i></span></div>
+      <button class="iconbtn" id="themeBtn" type="button"><span id="themeIcon"></span><span id="themeText">Dark</span></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEARN -->
+    <section id="v-learn" aria-label="Lessons">
+      <div class="chips" id="chips" role="navigation" aria-label="Lessons"></div>
+      <div class="learn">
+        <article class="lesson" id="lesson"></article>
+        <aside class="bench sticky" aria-label="Workbench">
+          <div class="toolbar">
+            <button class="btn primary" id="lRun" type="button">Run</button>
+            <button class="btn good" id="lCheck" type="button">Check answer</button>
+            <button class="btn ghost" id="lHint" type="button">Hint</button>
+            <button class="btn ghost sp" id="lReset" type="button">Reset</button>
+          </div>
+          <div class="hintline"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> runs your code. Your work is saved in this browser.</div>
+          <div id="lEditor"></div>
+          <div id="lHints"></div>
+          <div id="lInputWrap">
+            <div class="label"><label for="lInput">Input (one answer per line)</label></div>
+            <textarea class="input" id="lInput" spellcheck="false" rows="3"></textarea>
+          </div>
+          <div class="label"><span>Output</span></div>
+          <div class="panel" id="lOut" aria-live="polite"><span class="muted">Press Run to see what your program prints.</span></div>
+          <div id="lResults" aria-live="polite"></div>
+          <details class="sol" id="lSol">
+            <summary>Stuck? Show a solution</summary>
+            <div class="body"><p>Try the hints first. Reading a solution is useful, but typing your own is what teaches you.</p><div id="lSolCode"></div></div>
+          </details>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PLAYGROUND -->
+    <section id="v-play" hidden aria-label="Playground">
+      <h2>Playground</h2>
+      <p class="lead">Write any Kestral program. Pick an example to read and change, or start from scratch. To keep a program, copy it into a text file that ends in <span class="inl">.kes</span> and run it with <span class="inl">node bin/kestral.js yourfile.kes</span>.</p>
+      <div class="play">
+        <div class="stackcol">
+          <div class="toolbar">
+            <button class="btn primary" id="pRun" type="button">Run</button>
+            <label class="muted" for="pPick">Example</label>
+            <select class="pick" id="pPick"></select>
+            <button class="btn ghost" id="pCopy" type="button">Copy code</button>
+            <button class="btn ghost sp" id="pClear" type="button">New</button>
+          </div>
+          <div id="pEditor"></div>
+        </div>
+        <div class="stackcol">
+          <div class="label"><label for="pInput">Input (one answer per line)</label></div>
+          <textarea class="input" id="pInput" spellcheck="false" rows="4"></textarea>
+          <div class="label"><span>Output</span></div>
+          <div class="panel" id="pOut" aria-live="polite"><span class="muted">Press Run to see what your program prints.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REFERENCE -->
+    <section id="v-ref" hidden class="ref" aria-label="Reference">
+      <h2>Reference</h2>
+      <p class="lead">Everything in Kestral on one page. Type to filter.</p>
+      <div class="refsearch"><label class="muted" for="refQ">Search</label><input id="refQ" type="search" placeholder="e.g. sort, text, loop" autocomplete="off"></div>
+      <div id="refBody"></div>
+    </section>
+  </main>
+</div>
+
+<script>/*  Kestral 1.0.0 — a small, friendly, general-purpose programming language.
+    Source files use the .kes extension.
+    This single file runs in Node.js and in the browser. */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.Kestral = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+'use strict';
+
+const VERSION = '1.0.0';
+
+/* ------------------------------------------------------------------ *
+ *  Errors
+ * ------------------------------------------------------------------ */
+class KestralError extends Error {
+  constructor(message, line, col, opts) {
+    super(message);
+    this.name = 'KestralError';
+    this.line = line || 0;
+    this.col = col || 0;
+    this.fatal = !!(opts && opts.fatal);          // cannot be caught by try/catch
+    this.phase = (opts && opts.phase) || 'runtime';
+    this.incomplete = !!(opts && opts.incomplete); // syntax error because input ended early
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Lexer
+ * ------------------------------------------------------------------ */
+const KEYWORDS = new Set([
+  'let', 'fn', 'if', 'else', 'while', 'for', 'in', 'loop', 'times', 'stop', 'skip',
+  'give', 'try', 'catch', 'fail', 'match', 'and', 'or', 'not', 'true', 'false',
+  'nothing', 'say', 'use'
+]);
+const TWO_CHAR = new Set(['==', '!=', '<=', '>=', '+=', '-=', '*=', '/=', '%=', '..', '=>', '|>', '??', '**']);
+const ONE_CHAR = new Set(['+', '-', '*', '/', '%', '<', '>', '=', '(', ')', '[', ']', '{', '}', ',', '.', ':']);
+
+const isDigit = c => c >= '0' && c <= '9';
+const isIdStart = c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
+const isIdPart = c => isIdStart(c) || isDigit(c);
+
+function lex(src, line0) {
+  const out = [];
+  let i = 0, line = line0 || 1, ls = 0;
+  const n = src.length;
+  const tok = (type, v, s, extra) => Object.assign({ type, v, line, col: s - ls + 1 }, extra);
+  const synErr = (msg, s) => { throw new KestralError(msg, line, s - ls + 1, { phase: 'syntax' }); };
+
+  while (i < n) {
+    const c = src[i];
+    if (c === ' ' || c === '\t' || c === '\r') { i++; continue; }
+    if (c === '\n') { out.push(tok('nl', '\n', i)); i++; line++; ls = i; continue; }
+    if (c === ';') { out.push(tok('nl', ';', i)); i++; continue; }
+    if (c === '/' && src[i + 1] === '/') { while (i < n && src[i] !== '\n') i++; continue; }
+
+    if (isDigit(c)) {
+      const s = i;
+      while (i < n && isDigit(src[i])) i++;
+      if (src[i] === '.' && isDigit(src[i + 1] || '')) { i++; while (i < n && isDigit(src[i])) i++; }
+      if (i < n && isIdStart(src[i])) synErr(`A number can't be followed by letters ("${src.slice(s, i + 1)}...")`, s);
+      out.push(tok('num', parseFloat(src.slice(s, i)), s));
+      continue;
+    }
+
+    if (isIdStart(c)) {
+      const s = i;
+      while (i < n && isIdPart(src[i])) i++;
+      const word = src.slice(s, i);
+      out.push(tok(KEYWORDS.has(word) ? 'kw' : 'id', word, s));
+      continue;
+    }
+
+    if (c === '"' || c === "'") {
+      const s = i, q = c, startLine = line, startCol = s - ls + 1;
+      i++;
+      const parts = [];
+      let cur = '';
+      for (;;) {
+        if (i >= n || src[i] === '\n') {
+          throw new KestralError('This text never closes. Add a closing ' + q + ' at the end.', startLine, startCol, { phase: 'syntax' });
+        }
+        const ch = src[i];
+        if (ch === q) { i++; break; }
+        if (ch === '\\') {
+          const e = src[i + 1];
+          const map = { n: '\n', t: '\t', '\\': '\\', '"': '"', "'": "'", '{': '{', '}': '}' };
+          if (e !== undefined && Object.prototype.hasOwnProperty.call(map, e)) { cur += map[e]; i += 2; }
+          else { cur += '\\'; i++; }
+          continue;
+        }
+        if (ch === '{') {
+          let depth = 1, j = i + 1;
+          while (j < n && depth > 0) {
+            const d = src[j];
+            if (d === '\n') break;
+            if (d === '{') depth++;
+            else if (d === '}') depth--;
+            else if (d === '"' || d === "'") {
+              const qq = d; j++;
+              while (j < n && src[j] !== qq && src[j] !== '\n') { if (src[j] === '\\') j++; j++; }
+            }
+            j++;
+          }
+          if (depth !== 0) {
+            throw new KestralError('This { inside the text never closes. Use \\{ if you want a literal brace.', line, i - ls + 1, { phase: 'syntax' });
+          }
+          const exprSrc = src.slice(i + 1, j - 1);
+          if (!exprSrc.trim()) {
+            throw new KestralError('Empty { } inside text. Put a value inside, or write \\{ \\} for literal braces.', line, i - ls + 1, { phase: 'syntax' });
+          }
+          if (cur) parts.push(cur);
+          cur = '';
+          parts.push({ expr: exprSrc, line, col: i - ls + 2 });
+          i = j;
+          continue;
+        }
+        cur += ch; i++;
+      }
+      if (cur || parts.length === 0) parts.push(cur);
+      out.push(tok('str', null, s, { parts, line: startLine, col: startCol }));
+      continue;
+    }
+
+    const two = src.substr(i, 2);
+    if (TWO_CHAR.has(two)) { out.push(tok('op', two, i)); i += 2; continue; }
+    if (ONE_CHAR.has(c)) { out.push(tok('op', c, i)); i++; continue; }
+    if (c === '&' && src[i + 1] === '&') synErr('Use the word and instead of &&.', i);
+    if (c === '|' && src[i + 1] === '|') synErr('Use the word or instead of ||.', i);
+    if (c === '!') synErr('Use the word not instead of !  (for "not equal" write != ).', i);
+    synErr(`I don't understand the character "${c}".`, i);
+  }
+  out.push({ type: 'eof', v: null, line, col: i - ls + 1 });
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Parser
+ * ------------------------------------------------------------------ */
+function describe(t) {
+  if (t.type === 'nl') return 'the end of the line';
+  if (t.type === 'eof') return 'the end of the program';
+  if (t.type === 'str') return 'some text';
+  if (t.type === 'num') return `the number ${t.v}`;
+  return `"${t.v}"`;
+}
+
+class Parser {
+  constructor(tokens) { this.t = tokens; this.p = 0; }
+  get cur() { return this.t[this.p]; }
+  peek(k) { return this.t[Math.min(this.p + (k || 1), this.t.length - 1)]; }
+  err(msg, tok) {
+    tok = tok || this.cur;
+    throw new KestralError(msg, tok.line, tok.col, { phase: 'syntax', incomplete: tok.type === 'eof' });
+  }
+  isOp(v) { const c = this.cur; return c.type === 'op' && c.v === v; }
+  isKw(v) { const c = this.cur; return c.type === 'kw' && c.v === v; }
+  eatOp(v) { if (this.isOp(v)) { this.p++; return true; } return false; }
+  eatKw(v) { if (this.isKw(v)) { this.p++; return true; } return false; }
+  expectOp(v, hint) {
+    if (!this.eatOp(v)) this.err(hint || `I expected "${v}" here but found ${describe(this.cur)}.`);
+  }
+  expectKw(v, hint) {
+    if (!this.eatKw(v)) this.err(hint || `I expected "${v}" here but found ${describe(this.cur)}.`);
+  }
+  skipNL() { while (this.cur.type === 'nl') this.p++; }
+  atEnd() { const c = this.cur; return c.type === 'nl' || c.type === 'eof' || (c.type === 'op' && c.v === '}'); }
+
+  // If a newline is followed by the operator `v`, step over the newlines (for chains).
+  nlThenOp(v) {
+    if (this.cur.type !== 'nl') return false;
+    let k = this.p;
+    while (this.t[k].type === 'nl') k++;
+    if (this.t[k].type === 'op' && this.t[k].v === v) { this.p = k; return true; }
+    return false;
+  }
+
+  parseProgram() {
+    const body = [];
+    this.skipNL();
+    while (this.cur.type !== 'eof') {
+      body.push(this.parseStatement());
+      this.endStatement();
+      this.skipNL();
+    }
+    return { type: 'Block', body, line: 1 };
+  }
+
+  endStatement() {
+    const c = this.cur;
+    if (c.type === 'nl') { this.p++; return; }
+    if (c.type === 'eof' || (c.type === 'op' && c.v === '}')) return;
+    this.err(`I didn't expect ${describe(c)} here. Put each statement on its own line.`);
+  }
+
+  parseBlock() {
+    const open = this.cur;
+    if (!this.isOp('{')) this.err(`I expected a { to start a block but found ${describe(this.cur)}.`);
+    this.p++;
+    this.skipNL();
+    const body = [];
+    while (!this.isOp('}')) {
+      if (this.cur.type === 'eof') throw new KestralError('This block was opened with { but never closed with }.', open.line, open.col, { phase: 'syntax', incomplete: true });
+      body.push(this.parseStatement());
+      this.endStatement();
+      this.skipNL();
+    }
+    this.p++;
+    return { type: 'Block', body, line: open.line };
+  }
+
+  parseStatement() {
+    const tk = this.cur, line = tk.line, col = tk.col;
+    if (tk.type === 'kw') {
+      switch (tk.v) {
+        case 'let': {
+          this.p++;
+          const name = this.cur;
+          if (name.type !== 'id') this.err(`After "let" I expected a name, like  let score = 10`);
+          this.p++;
+          this.expectOp('=', `After "let ${name.v}" I expected "=" , like  let ${name.v} = 10`);
+          this.skipNL();
+          const value = this.parseExpr();
+          return { type: 'Let', name: name.v, value, line, col };
+        }
+        case 'say': {
+          this.p++;
+          const args = [];
+          if (!this.atEnd()) {
+            args.push(this.parseExpr());
+            while (this.eatOp(',')) { this.skipNL(); args.push(this.parseExpr()); }
+          }
+          return { type: 'Say', args, line, col };
+        }
+        case 'fn': {
+          if (this.peek().type === 'id') {
+            this.p++;
+            const name = this.cur.v; this.p++;
+            const params = this.parseParams();
+            const body = this.parseFnBody();
+            return { type: 'FnDecl', name, params, body, line, col };
+          }
+          break;
+        }
+        case 'if': return this.parseIf();
+        case 'while': {
+          this.p++;
+          const cond = this.parseExpr();
+          const body = this.parseBlock();
+          return { type: 'While', cond, body, line, col };
+        }
+        case 'for': {
+          this.p++;
+          const names = [];
+          if (this.cur.type !== 'id') this.err('After "for" I expected a name, like  for item in list { ... }');
+          names.push(this.cur.v); this.p++;
+          if (this.eatOp(',')) {
+            if (this.cur.type !== 'id') this.err('After the comma I expected a second name, like  for key, value in map { ... }');
+            names.push(this.cur.v); this.p++;
+          }
+          this.expectKw('in', `I expected the word "in" here, like  for ${names[0]} in list { ... }`);
+          const iter = this.parseExpr();
+          const body = this.parseBlock();
+          return { type: 'For', names, iter, body, line, col };
+        }
+        case 'loop': {
+          this.p++;
+          const count = this.parseExpr();
+          this.expectKw('times', 'I expected the word "times", like  loop 3 times { ... }');
+          const body = this.parseBlock();
+          return { type: 'Loop', count, body, line, col };
+        }
+        case 'stop': this.p++; return { type: 'Stop', line, col };
+        case 'skip': this.p++; return { type: 'Skip', line, col };
+        case 'give': {
+          this.p++;
+          const value = this.atEnd() ? null : this.parseExpr();
+          return { type: 'Give', value, line, col };
+        }
+        case 'try': {
+          this.p++;
+          const body = this.parseBlock();
+          this.nlThenKw('catch');
+          this.expectKw('catch', 'A try block needs a catch block after it, like  try { ... } catch e { ... }');
+          let name = null;
+          if (this.cur.type === 'id') { name = this.cur.v; this.p++; }
+          const handler = this.parseBlock();
+          return { type: 'Try', body, name, handler, line, col };
+        }
+        case 'fail': {
+          this.p++;
+          const value = this.parseExpr();
+          return { type: 'Fail', value, line, col };
+        }
+        case 'use': {
+          this.p++;
+          const s = this.cur;
+          if (s.type !== 'str' || s.parts.length !== 1 || typeof s.parts[0] !== 'string') this.err('After "use" put the file name in quotes, like  use "tools.kes"');
+          this.p++;
+          return { type: 'Use', path: s.parts[0], line, col };
+        }
+        default: break;
+      }
+    }
+    // expression or assignment
+    const expr = this.parseExpr();
+    const c = this.cur;
+    if (expr.type === 'Ident' && !this.atEnd() && !(c.type === 'op' && /^(=|\+=|-=|\*=|\/=|%=|\||\?\?|\.\.|,)$/.test(c.v))) {
+      const sug = suggest(expr.name, STATEMENT_WORDS);
+      if (sug) this.err(`"${expr.name}" isn't a command I know. Did you mean "${sug}"?`, tk);
+    }
+    if (c.type === 'op' && (c.v === '=' || c.v === '+=' || c.v === '-=' || c.v === '*=' || c.v === '/=' || c.v === '%=')) {
+      if (expr.type !== 'Ident' && expr.type !== 'Index' && expr.type !== 'Member') {
+        this.err("You can only assign to a name, a list position like  items[0] , or a map key like  person.name", c);
+      }
+      this.p++;
+      this.skipNL();
+      const value = this.parseExpr();
+      return { type: 'Assign', op: c.v, target: expr, value, line, col };
+    }
+    return expr;
+  }
+
+  nlThenKw(kw) {
+    if (this.cur.type !== 'nl') return;
+    let k = this.p;
+    while (this.t[k].type === 'nl') k++;
+    if (this.t[k].type === 'kw' && this.t[k].v === kw) this.p = k;
+  }
+
+  parseIf() {
+    const tk = this.cur;
+    this.p++;
+    const cond = this.parseExpr();
+    if (!this.isOp('{')) this.err(`I expected a { after the condition but found ${describe(this.cur)}.`);
+    const then = this.parseBlock();
+    let els = null;
+    this.nlThenKw('else');
+    if (this.eatKw('else')) {
+      if (this.isKw('if')) els = this.parseIf();
+      else els = this.parseBlock();
+    }
+    return { type: 'If', cond, then, else: els, line: tk.line, col: tk.col };
+  }
+
+  parseParams() {
+    this.expectOp('(', 'I expected ( to start the parameter list, like  fn add(a, b) { ... }');
+    const ps = [];
+    this.skipNL();
+    while (!this.isOp(')')) {
+      const id = this.cur;
+      if (id.type !== 'id') this.err(`I expected a parameter name but found ${describe(id)}.`);
+      this.p++;
+      let def = null;
+      if (this.eatOp('=')) def = this.parseExpr();
+      ps.push({ name: id.v, default: def });
+      this.skipNL();
+      if (!this.eatOp(',')) break;
+      this.skipNL();
+    }
+    this.skipNL();
+    this.expectOp(')', 'I expected ) to close the parameter list.');
+    return ps;
+  }
+
+  parseFnBody() {
+    const tk = this.cur;
+    if (this.eatOp('=>')) {
+      this.skipNL();
+      const e = this.parseExpr();
+      return { type: 'Block', body: [{ type: 'Give', value: e, line: tk.line, col: tk.col }], line: tk.line };
+    }
+    if (this.isOp('{')) return this.parseBlock();
+    this.err(`After the parameters I expected { or => but found ${describe(this.cur)}.`);
+  }
+
+  parseArgs() {
+    this.expectOp('(');
+    const args = [];
+    this.skipNL();
+    while (!this.isOp(')')) {
+      args.push(this.parseExpr());
+      this.skipNL();
+      if (!this.eatOp(',')) break;
+      this.skipNL();
+    }
+    this.skipNL();
+    this.expectOp(')', 'I expected ) to close this list of values.');
+    return args;
+  }
+
+  /* ---- expressions, lowest precedence first ---- */
+  parseExpr() { return this.parsePipe(); }
+
+  parsePipe() {
+    let left = this.parseCoalesce();
+    for (;;) {
+      this.nlThenOp('|>');
+      if (this.isOp('|>')) {
+        const tk = this.cur; this.p++; this.skipNL();
+        const right = this.parsePostfix();
+        left = { type: 'Pipe', left, right, line: tk.line, col: tk.col };
+      } else break;
+    }
+    return left;
+  }
+
+  parseCoalesce() {
+    let left = this.parseOr();
+    while (this.isOp('??')) {
+      const tk = this.cur; this.p++; this.skipNL();
+      left = { type: 'Coalesce', left, right: this.parseOr(), line: tk.line, col: tk.col };
+    }
+    return left;
+  }
+
+  parseOr() {
+    let left = this.parseAnd();
+    while (this.isKw('or')) {
+      const tk = this.cur; this.p++; this.skipNL();
+      left = { type: 'Logic', op: 'or', left, right: this.parseAnd(), line: tk.line, col: tk.col };
+    }
+    return left;
+  }
+
+  parseAnd() {
+    let left = this.parseNot();
+    while (this.isKw('and')) {
+      const tk = this.cur; this.p++; this.skipNL();
+      left = { type: 'Logic', op: 'and', left, right: this.parseNot(), line: tk.line, col: tk.col };
+    }
+    return left;
+  }
+
+  parseNot() {
+    if (this.isKw('not')) {
+      const tk = this.cur; this.p++;
+      return { type: 'Unary', op: 'not', arg: this.parseNot(), line: tk.line, col: tk.col };
+    }
+    return this.parseCompare();
+  }
+
+  parseCompare() {
+    let left = this.parseRange();
+    for (;;) {
+      const c = this.cur;
+      if (c.type === 'op' && (c.v === '==' || c.v === '!=' || c.v === '<' || c.v === '<=' || c.v === '>' || c.v === '>=')) {
+        this.p++; this.skipNL();
+        left = { type: 'Binary', op: c.v, left, right: this.parseRange(), line: c.line, col: c.col };
+      } else break;
+    }
+    return left;
+  }
+
+  parseRange() {
+    const left = this.parseAdd();
+    if (this.isOp('..')) {
+      const tk = this.cur; this.p++; this.skipNL();
+      return { type: 'Range', from: left, to: this.parseAdd(), line: tk.line, col: tk.col };
+    }
+    return left;
+  }
+
+  parseAdd() {
+    let left = this.parseMul();
+    for (;;) {
+      const c = this.cur;
+      if (c.type === 'op' && (c.v === '+' || c.v === '-')) {
+        this.p++; this.skipNL();
+        left = { type: 'Binary', op: c.v, left, right: this.parseMul(), line: c.line, col: c.col };
+      } else break;
+    }
+    return left;
+  }
+
+  parseMul() {
+    let left = this.parseUnary();
+    for (;;) {
+      const c = this.cur;
+      if (c.type === 'op' && (c.v === '*' || c.v === '/' || c.v === '%')) {
+        this.p++; this.skipNL();
+        left = { type: 'Binary', op: c.v, left, right: this.parseUnary(), line: c.line, col: c.col };
+      } else break;
+    }
+    return left;
+  }
+
+  parseUnary() {
+    if (this.isOp('-')) {
+      const tk = this.cur; this.p++;
+      return { type: 'Unary', op: 'neg', arg: this.parseUnary(), line: tk.line, col: tk.col };
+    }
+    return this.parsePower();
+  }
+
+  parsePower() {
+    const base = this.parsePostfix();
+    if (this.isOp('**')) {
+      const tk = this.cur; this.p++; this.skipNL();
+      return { type: 'Binary', op: '**', left: base, right: this.parseUnary(), line: tk.line, col: tk.col };
+    }
+    return base;
+  }
+
+  parsePostfix() {
+    let e = this.parsePrimary();
+    for (;;) {
+      const c = this.cur;
+      if (c.type === 'op' && c.v === '(') {
+        const args = this.parseArgs();
+        e = { type: 'Call', callee: e, args, line: c.line, col: c.col };
+      } else if (c.type === 'op' && c.v === '[') {
+        this.p++; this.skipNL();
+        const index = this.parseExpr();
+        this.skipNL();
+        this.expectOp(']', 'I expected ] to close this position, like  items[0]');
+        e = { type: 'Index', obj: e, index, line: c.line, col: c.col };
+      } else if ((c.type === 'op' && c.v === '.') || this.nlThenOp('.')) {
+        const dot = this.cur; this.p++;
+        const nm = this.cur;
+        if (nm.type !== 'id' && nm.type !== 'kw') this.err(`After "." I expected a name but found ${describe(nm)}.`);
+        this.p++;
+        e = { type: 'Member', obj: e, name: nm.v, line: dot.line, col: dot.col };
+      } else break;
+    }
+    return e;
+  }
+
+  subParse(exprSrc, line, col) {
+    let toks;
+    try { toks = lex(exprSrc, line); }
+    catch (e) { if (e instanceof KestralError) e.col += col - 1; throw e; }
+    const p = new Parser(toks);
+    p.skipNL();
+    const node = p.parseExpr();
+    p.skipNL();
+    if (p.cur.type !== 'eof') p.err(`I didn't expect ${describe(p.cur)} inside { } in this text.`);
+    return node;
+  }
+
+  parsePrimary() {
+    const tk = this.cur;
+    switch (tk.type) {
+      case 'num': this.p++; return { type: 'Num', v: tk.v, line: tk.line, col: tk.col };
+      case 'str': {
+        this.p++;
+        const parts = tk.parts.map(pt => typeof pt === 'string' ? pt : this.subParse(pt.expr, pt.line, pt.col));
+        return { type: 'Str', parts, line: tk.line, col: tk.col };
+      }
+      case 'id': this.p++; return { type: 'Ident', name: tk.v, line: tk.line, col: tk.col };
+      case 'kw':
+        switch (tk.v) {
+          case 'true': this.p++; return { type: 'Bool', v: true, line: tk.line, col: tk.col };
+          case 'false': this.p++; return { type: 'Bool', v: false, line: tk.line, col: tk.col };
+          case 'nothing': this.p++; return { type: 'Nothing', line: tk.line, col: tk.col };
+          case 'fn': {
+            this.p++;
+            if (this.cur.type === 'id') this.err(`Named functions are declared on their own line, like  fn ${this.cur.v}(...) { ... }`);
+            const params = this.parseParams();
+            const body = this.parseFnBody();
+            return { type: 'Lambda', params, body, line: tk.line, col: tk.col };
+          }
+          case 'if': return this.parseIf();
+          case 'match': return this.parseMatch();
+          default: break;
+        }
+        break;
+      case 'op':
+        if (tk.v === '(') {
+          this.p++; this.skipNL();
+          const e = this.parseExpr();
+          this.skipNL();
+          this.expectOp(')', 'I expected ) to close this bracket.');
+          return e;
+        }
+        if (tk.v === '[') {
+          this.p++; this.skipNL();
+          const items = [];
+          while (!this.isOp(']')) {
+            items.push(this.parseExpr());
+            this.skipNL();
+            if (!this.eatOp(',')) break;
+            this.skipNL();
+          }
+          this.skipNL();
+          this.expectOp(']', 'I expected ] to close this list.');
+          return { type: 'List', items, line: tk.line, col: tk.col };
+        }
+        if (tk.v === '{') {
+          this.p++; this.skipNL();
+          const entries = [];
+          while (!this.isOp('}')) {
+            const k = this.cur;
+            let key;
+            if (k.type === 'id' || k.type === 'kw') key = k.v;
+            else if (k.type === 'num') key = k.v;
+            else if (k.type === 'str' && k.parts.every(x => typeof x === 'string')) key = k.parts.join('');
+            else this.err(`A map key should be a name or some text, but I found ${describe(k)}.`);
+            this.p++;
+            this.expectOp(':', `After the key I expected ":" , like  {name: "Ada"}`);
+            this.skipNL();
+            entries.push({ key, value: this.parseExpr() });
+            this.skipNL();
+            if (!this.eatOp(',')) break;
+            this.skipNL();
+          }
+          this.skipNL();
+          this.expectOp('}', 'I expected } to close this map.');
+          return { type: 'MapLit', entries, line: tk.line, col: tk.col };
+        }
+        break;
+      default: break;
+    }
+    if (tk.type === 'eof') this.err('The program ended but I was still expecting a value.');
+    if (tk.type === 'nl') this.err('I expected a value here but the line ended.');
+    this.err(`I expected a value here but found ${describe(tk)}.`);
+  }
+
+  parseMatch() {
+    const tk = this.cur;
+    this.p++;
+    const subject = this.parseExpr();
+    this.expectOp('{', 'I expected a { after the value being matched, like  match x { ... }');
+    this.skipNL();
+    const arms = [];
+    while (!this.isOp('}')) {
+      if (this.cur.type === 'eof') throw new KestralError('This match was opened with { but never closed with }.', tk.line, tk.col, { phase: 'syntax', incomplete: true });
+      let pats = null;
+      if (this.isKw('else')) this.p++;
+      else {
+        pats = [this.parseExpr()];
+        while (this.eatOp(',')) { this.skipNL(); pats.push(this.parseExpr()); }
+      }
+      this.expectOp('=>', 'Each match line needs =>  after its value(s), like  1 => "one"');
+      this.skipNL();
+      const body = this.isOp('{') ? this.parseBlock() : this.parseStatement();
+      arms.push({ pats, body });
+      if (!this.atEnd()) this.err(`I didn't expect ${describe(this.cur)} here. Put each match line on its own line.`);
+      this.skipNL();
+    }
+    this.p++;
+    return { type: 'Match', subject, arms, line: tk.line, col: tk.col };
+  }
+}
+
+function parse(src, line0) {
+  return new Parser(lex(src, line0)).parseProgram();
+}
+
+/* ------------------------------------------------------------------ *
+ *  Runtime values
+ * ------------------------------------------------------------------ */
+class Env {
+  constructor(parent) { this.vars = new Map(); this.parent = parent || null; }
+  lookup(name) {
+    let e = this;
+    while (e) { if (e.vars.has(name)) return e; e = e.parent; }
+    return null;
+  }
+  define(name, v) { this.vars.set(name, v); }
+  names() {
+    const s = new Set();
+    for (let e = this; e; e = e.parent) for (const k of e.vars.keys()) s.add(k);
+    return [...s];
+  }
+}
+class KFn {
+  constructor(name, params, body, closure) { this.name = name; this.params = params; this.body = body; this.closure = closure; }
+}
+class Builtin {
+  constructor(name, min, max, fn) { this.name = name; this.min = min; this.max = max; this.fn = fn; }
+}
+class Bound {
+  constructor(fn, self) { this.fn = fn; this.self = self; }
+}
+class KRange {
+  constructor(from, to) { this.from = from; this.to = to; }
+  get length() { return Math.abs(this.to - this.from) + 1; }
+  at(i) { return this.from <= this.to ? this.from + i : this.from - i; }
+  toArray() { const a = new Array(this.length); for (let i = 0; i < a.length; i++) a[i] = this.at(i); return a; }
+  contains(x) { return typeof x === 'number' && x >= Math.min(this.from, this.to) && x <= Math.max(this.from, this.to); }
+}
+
+const STATEMENT_WORDS = ['say', 'let', 'fn', 'if', 'else', 'while', 'for', 'loop', 'give', 'stop', 'skip', 'try', 'catch', 'fail', 'match', 'use'];
+const isFn = v => v instanceof KFn || v instanceof Builtin || v instanceof Bound;
+
+function typeName(v) {
+  if (v === null || v === undefined) return 'nothing';
+  switch (typeof v) {
+    case 'number': return 'number';
+    case 'string': return 'text';
+    case 'boolean': return 'bool';
+    default: break;
+  }
+  if (Array.isArray(v)) return 'list';
+  if (v instanceof Map) return 'map';
+  if (v instanceof KRange) return 'range';
+  if (isFn(v)) return 'function';
+  return 'value';
+}
+
+function fmtNumber(n) {
+  if (Number.isNaN(n)) return 'NaN';
+  if (!Number.isFinite(n)) return n > 0 ? 'Infinity' : '-Infinity';
+  if (Number.isInteger(n)) return Math.abs(n) < 1e21 ? String(n) : n.toExponential();
+  return String(parseFloat(n.toPrecision(12)));
+}
+
+function quote(s) {
+  return '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '\\t') + '"';
+}
+
+function format(v, nested, seen) {
+  if (v === null || v === undefined) return 'nothing';
+  switch (typeof v) {
+    case 'number': return fmtNumber(v);
+    case 'string': return nested ? quote(v) : v;
+    case 'boolean': return v ? 'true' : 'false';
+    default: break;
+  }
+  seen = seen || new Set();
+  if (Array.isArray(v)) {
+    if (seen.has(v)) return '[...]';
+    seen.add(v);
+    const s = '[' + v.map(x => format(x, true, seen)).join(', ') + ']';
+    seen.delete(v);
+    return s;
+  }
+  if (v instanceof Map) {
+    if (seen.has(v)) return '{...}';
+    seen.add(v);
+    const parts = [];
+    for (const [k, val] of v) {
+      const ks = typeof k === 'string' ? (/^[A-Za-z_][A-Za-z0-9_]*$/.test(k) ? k : quote(k)) : format(k, true);
+      parts.push(ks + ': ' + format(val, true, seen));
+    }
+    seen.delete(v);
+    return '{' + parts.join(', ') + '}';
+  }
+  if (v instanceof KRange) return v.from + '..' + v.to;
+  if (v instanceof KFn) return '<function ' + (v.name || 'anonymous') + '>';
+  if (v instanceof Builtin) return '<built-in ' + v.name + '>';
+  if (v instanceof Bound) return '<function ' + (v.fn.name || 'anonymous') + '>';
+  return String(v);
+}
+
+function eq(a, b) {
+  if (a === b) return true;
+  if (a === null || b === null || a === undefined || b === undefined) return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!eq(a[i], b[i])) return false;
+    return true;
+  }
+  if (a instanceof Map) {
+    if (!(b instanceof Map) || a.size !== b.size) return false;
+    for (const [k, v] of a) { if (!b.has(k) || !eq(v, b.get(k))) return false; }
+    return true;
+  }
+  if (a instanceof KRange) return b instanceof KRange && a.from === b.from && a.to === b.to;
+  return false;
+}
+
+const truthy = v => v !== null && v !== undefined && v !== false && v !== 0 && v !== '';
+
+/* Edit distance where swapping two neighbouring letters ("sya" -> "say") counts as one edit. */
+function editDistance(a, b) {
+  const m = a.length, n = b.length;
+  const d = [];
+  for (let i = 0; i <= m; i++) { d.push(new Array(n + 1).fill(0)); d[i][0] = i; }
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  }
+  return d[m][n];
+}
+
+function suggest(name, names) {
+  let best = null, bd = Infinity;
+  const lname = name.toLowerCase();
+  for (const c of names) {
+    const d = editDistance(lname, c.toLowerCase());
+    if (d < bd) { bd = d; best = c; }
+  }
+  const limit = name.length <= 4 ? 1 : 2;
+  return best !== null && bd <= limit ? best : null;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Interpreter
+ * ------------------------------------------------------------------ */
+class Interp {
+  constructor(opts) {
+    this.opts = opts || {};
+    this.global = new Env(null);
+    this.steps = 0;
+    this.maxSteps = this.opts.maxSteps || 5e6;
+    this.maxOutput = this.opts.maxOutput || 500000;
+    this.maxDepth = this.opts.maxDepth || 800;
+    this.outLen = 0;
+    this.depth = 0;
+    this.sig = null;       // 'break' | 'continue' | 'return'
+    this.retVal = null;
+    this.curNode = null;
+    this.loaded = new Set();
+    installBuiltins(this);
+  }
+
+  /* ----- helpers ----- */
+  fail(msg, node, fatal) {
+    node = node || this.curNode || {};
+    throw new KestralError(msg, node.line || 0, node.col || 0, { fatal: !!fatal });
+  }
+  str(v) { return format(v, false); }
+  print(s) {
+    this.outLen += s.length + 1;
+    if (this.outLen > this.maxOutput) this.fail('This program printed too much text and was stopped.', this.curNode, true);
+    if (this.opts.print) this.opts.print(s);
+  }
+  define(name, v) { this.global.define(name, v); }
+
+  /* ----- running ----- */
+  run(source, runOpts) {
+    runOpts = runOpts || {};
+    const env = runOpts.env || this.global;
+    const ast = parse(source, 1);
+    this.steps = 0; this.outLen = 0; this.depth = 0; this.sig = null;
+    let value = null;
+    try {
+      value = this.execBlock(ast, env);
+    } catch (e) {
+      this.sig = null;
+      if (e instanceof RangeError && /call stack/i.test(e.message)) {
+        throw new KestralError('This went too deep. Does a function keep calling itself without stopping?', 0, 0, { fatal: true });
+      }
+      throw e;
+    }
+    if (this.sig) {
+      const s = this.sig; this.sig = null;
+      const where = s === 'return' ? '"give" only works inside a function.' : `"${s === 'break' ? 'stop' : 'skip'}" only works inside a loop.`;
+      throw new KestralError(where, 0, 0);
+    }
+    const last = ast.body[ast.body.length - 1];
+    this.lastWasExpr = !!last && !STATEMENT_TYPES.has(last.type);
+    return value;
+  }
+
+  execBlock(block, env) {
+    let last = null;
+    const body = block.body;
+    // functions declared with `fn name(...)` can be used anywhere in their block
+    if (block.fnDecls === undefined) block.fnDecls = body.filter(s => s.type === 'FnDecl');
+    for (let i = 0; i < block.fnDecls.length; i++) {
+      const d = block.fnDecls[i];
+      const f = new KFn(d.name, d.params, d.body, env);
+      f.decl = d;
+      env.define(d.name, f);
+    }
+    for (let i = 0; i < body.length; i++) {
+      last = this.ev(body[i], env);
+      if (this.sig) break;
+    }
+    return last;
+  }
+  scoped(block, env) { return this.execBlock(block, new Env(env)); }
+
+  /* ----- calling ----- */
+  callValue(f, args, node, calleeName) {
+    if (f instanceof KFn) return this.callFn(f, args, node);
+    if (f instanceof Builtin) {
+      if (args.length < f.min || args.length > f.max) {
+        const need = f.min === f.max ? `${f.min}` : (f.max === Infinity ? `at least ${f.min}` : `${f.min} to ${f.max}`);
+        this.fail(`${f.name}() needs ${need} value${need === '1' ? '' : 's'} but got ${args.length}.`, node);
+      }
+      const prev = this.curNode;
+      this.curNode = node;
+      try { return f.fn.apply(this, args); }
+      finally { this.curNode = prev; }
+    }
+    if (f instanceof Bound) return this.callValue(f.fn, [f.self].concat(args), node);
+    this.fail(calleeName
+      ? `"${calleeName}" is ${typeName(f) === 'nothing' ? 'nothing' : 'a ' + typeName(f)}, not a function, so it can't be called with ( ).`
+      : `This value is ${typeName(f) === 'nothing' ? 'nothing' : 'a ' + typeName(f)}, not a function, so it can't be called with ( ).`, node);
+  }
+
+  callFn(f, args, node) {
+    const name = f.name || 'this function';
+    const required = f.params.filter(p => !p.default).length;
+    if (args.length > f.params.length || args.length < required) {
+      const want = required === f.params.length ? `${required}` : `${required} to ${f.params.length}`;
+      this.fail(`${name}() needs ${want} value${want === '1' ? '' : 's'} but got ${args.length}.`, node);
+    }
+    if (++this.depth > this.maxDepth) {
+      this.depth = 0;
+      this.fail('This went too deep. Does a function keep calling itself without stopping?', node, true);
+    }
+    const env = new Env(f.closure);
+    for (let i = 0; i < f.params.length; i++) {
+      const p = f.params[i];
+      env.define(p.name, i < args.length ? args[i] : this.ev(p.default, env));
+    }
+    try { this.execBlock(f.body, env); }
+    finally { this.depth--; }
+    let result = null;
+    if (this.sig === 'return') { result = this.retVal; this.retVal = null; }
+    this.sig = null;
+    return result;
+  }
+
+  /* ----- operators ----- */
+  needNum(v, op, node, side) {
+    if (typeof v !== 'number') this.fail(`The ${op} operator needs numbers, but the ${side} side is ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}${typeof v === 'string' ? ' ("' + v + '")' : ''}.`, node);
+  }
+
+  binop(op, a, b, node) {
+    switch (op) {
+      case '+':
+        if (typeof a === 'number' && typeof b === 'number') return a + b;
+        if (typeof a === 'string' || typeof b === 'string') return this.str(a) + this.str(b);
+        if (Array.isArray(a) && Array.isArray(b)) return a.concat(b);
+        this.fail(`I can't add ${typeName(a)} and ${typeName(b)}.`, node);
+        break;
+      case '-': this.needNum(a, '-', node, 'left'); this.needNum(b, '-', node, 'right'); return a - b;
+      case '*':
+        if (typeof a === 'string' && typeof b === 'number') return this.repeatText(a, b, node);
+        if (typeof a === 'number' && typeof b === 'string') return this.repeatText(b, a, node);
+        this.needNum(a, '*', node, 'left'); this.needNum(b, '*', node, 'right'); return a * b;
+      case '/':
+        this.needNum(a, '/', node, 'left'); this.needNum(b, '/', node, 'right');
+        if (b === 0) this.fail('Cannot divide by zero.', node);
+        return a / b;
+      case '%':
+        this.needNum(a, '%', node, 'left'); this.needNum(b, '%', node, 'right');
+        if (b === 0) this.fail('Cannot divide by zero (in %).', node);
+        return ((a % b) + b) % b;
+      case '**': this.needNum(a, '**', node, 'left'); this.needNum(b, '**', node, 'right'); return Math.pow(a, b);
+      case '==': return eq(a, b);
+      case '!=': return !eq(a, b);
+      case '<': case '<=': case '>': case '>=': {
+        const ok = (typeof a === 'number' && typeof b === 'number') || (typeof a === 'string' && typeof b === 'string');
+        if (!ok) this.fail(`I can't compare ${typeName(a)} with ${typeName(b)} using ${op}.`, node);
+        if (op === '<') return a < b;
+        if (op === '<=') return a <= b;
+        if (op === '>') return a > b;
+        return a >= b;
+      }
+      default: break;
+    }
+    this.fail('Unknown operator ' + op, node);
+  }
+
+  repeatText(s, n, node) {
+    if (!Number.isInteger(n) || n < 0) this.fail('To repeat text, multiply by a whole number that is 0 or more.', node);
+    if (s.length * n > 1e6) this.fail('That repeated text would be too long.', node);
+    return s.repeat(n);
+  }
+
+  getIndex(o, i, node) {
+    if (Array.isArray(o) || typeof o === 'string' || o instanceof KRange) {
+      const len = o instanceof KRange ? o.length : o.length;
+      if (typeof i !== 'number' || !Number.isInteger(i)) this.fail(`A position must be a whole number, but I got ${typeName(i)}.`, node);
+      let k = i < 0 ? i + len : i;
+      if (k < 0 || k >= len) this.fail(`Position ${i} is outside this ${typeName(o)} (it has ${len} item${len === 1 ? '' : 's'}; positions go from 0 to ${len - 1}).`, node);
+      return o instanceof KRange ? o.at(k) : o[k];
+    }
+    if (o instanceof Map) { const v = o.get(i); return v === undefined ? null : v; }
+    this.fail(`I can't use [ ] on ${typeName(o) === 'nothing' ? 'nothing' : 'a ' + typeName(o)}.`, node);
+  }
+
+  checkKey(k, node) {
+    if (typeof k !== 'string' && typeof k !== 'number' && typeof k !== 'boolean') this.fail('Map keys must be text, numbers or true/false.', node);
+  }
+
+  setIndex(o, i, v, node) {
+    if (Array.isArray(o)) {
+      const len = o.length;
+      if (typeof i !== 'number' || !Number.isInteger(i)) this.fail(`A position must be a whole number, but I got ${typeName(i)}.`, node);
+      const k = i < 0 ? i + len : i;
+      if (k < 0 || k >= len) this.fail(`Position ${i} is outside this list (it has ${len} item${len === 1 ? '' : 's'}). Use push(list, value) to add to the end.`, node);
+      o[k] = v; return;
+    }
+    if (o instanceof Map) { this.checkKey(i, node); o.set(i, v); return; }
+    if (typeof o === 'string') this.fail("Text can't be changed in place. Build a new text instead.", node);
+    this.fail(`I can't assign into ${typeName(o) === 'nothing' ? 'nothing' : 'a ' + typeName(o)}.`, node);
+  }
+
+  getMember(o, name, node) {
+    if (o instanceof Map && o.has(name)) return o.get(name);
+    if (o === null || o === undefined) this.fail(`I can't read ".${name}" because the value is nothing.`, node);
+    const g = this.global.vars.get(name);
+    if (isFn(g)) return new Bound(g, o);
+    if (o instanceof Map) return null;
+    this.fail(`A ${typeName(o)} has no "${name}". (Methods like  value.upper()  work for built-in functions such as upper, len, push, ...)`, node);
+  }
+
+  /* ----- evaluation ----- */
+  ev(n, env) {
+    if (++this.steps > this.maxSteps) {
+      this.fail(`This program ran for too long (over ${this.maxSteps.toLocaleString ? this.maxSteps.toLocaleString('en-US') : this.maxSteps} steps). Is there a loop that never stops?`, n, true);
+    }
+    switch (n.type) {
+      case 'Num': return n.v;
+      case 'Bool': return n.v;
+      case 'Nothing': return null;
+      case 'Str': {
+        const ps = n.parts;
+        if (ps.length === 1 && typeof ps[0] === 'string') return ps[0];
+        let s = '';
+        for (let i = 0; i < ps.length; i++) s += typeof ps[i] === 'string' ? ps[i] : this.str(this.ev(ps[i], env));
+        return s;
+      }
+      case 'Ident': {
+        const e = env.lookup(n.name);
+        if (!e) {
+          const sug = suggest(n.name, env.names());
+          this.fail(`I don't know "${n.name}".${sug ? ` Did you mean "${sug}"?` : ' Create it first with  let ' + n.name + ' = ...'}`, n);
+        }
+        return e.vars.get(n.name);
+      }
+      case 'List': { const a = new Array(n.items.length); for (let i = 0; i < a.length; i++) a[i] = this.ev(n.items[i], env); return a; }
+      case 'MapLit': {
+        const m = new Map();
+        for (const en of n.entries) m.set(en.key, this.ev(en.value, env));
+        return m;
+      }
+      case 'Unary': {
+        const v = this.ev(n.arg, env);
+        if (n.op === 'not') return !truthy(v);
+        if (typeof v !== 'number') this.fail(`I can't put a minus sign on ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`, n);
+        return -v;
+      }
+      case 'Binary': return this.binop(n.op, this.ev(n.left, env), this.ev(n.right, env), n);
+      case 'Logic': {
+        const l = this.ev(n.left, env);
+        if (n.op === 'and') return truthy(l) ? this.ev(n.right, env) : l;
+        return truthy(l) ? l : this.ev(n.right, env);
+      }
+      case 'Coalesce': { const l = this.ev(n.left, env); return l === null ? this.ev(n.right, env) : l; }
+      case 'Range': {
+        const a = this.ev(n.from, env), b = this.ev(n.to, env);
+        if (!Number.isInteger(a) || !Number.isInteger(b)) this.fail('A range like 1..5 needs whole numbers on both sides.', n);
+        return new KRange(a, b);
+      }
+      case 'Pipe': {
+        const left = this.ev(n.left, env);
+        const r = n.right;
+        if (r.type === 'Call') {
+          const f = this.ev(r.callee, env);
+          const args = [left];
+          for (const a of r.args) args.push(this.ev(a, env));
+          return this.callValue(f, args, r, r.callee.type === 'Ident' ? r.callee.name : null);
+        }
+        const f = this.ev(r, env);
+        return this.callValue(f, [left], n, r.type === 'Ident' ? r.name : null);
+      }
+      case 'Call': {
+        const f = this.ev(n.callee, env);
+        const args = new Array(n.args.length);
+        for (let i = 0; i < args.length; i++) args[i] = this.ev(n.args[i], env);
+        return this.callValue(f, args, n, n.callee.type === 'Ident' ? n.callee.name : (n.callee.type === 'Member' ? n.callee.name : null));
+      }
+      case 'Index': return this.getIndex(this.ev(n.obj, env), this.ev(n.index, env), n);
+      case 'Member': return this.getMember(this.ev(n.obj, env), n.name, n);
+      case 'Lambda': return new KFn(null, n.params, n.body, env);
+      case 'If':
+        if (truthy(this.ev(n.cond, env))) return this.scoped(n.then, env);
+        if (n.else) return n.else.type === 'If' ? this.ev(n.else, env) : this.scoped(n.else, env);
+        return null;
+      case 'Match': {
+        const subj = this.ev(n.subject, env);
+        for (const arm of n.arms) {
+          let hit = arm.pats === null;
+          if (!hit) {
+            for (const p of arm.pats) {
+              const pv = this.ev(p, env);
+              if (pv instanceof KRange ? pv.contains(subj) : eq(subj, pv)) { hit = true; break; }
+            }
+          }
+          if (hit) return arm.body.type === 'Block' ? this.scoped(arm.body, env) : this.ev(arm.body, env);
+        }
+        return null;
+      }
+
+      /* ----- statements ----- */
+      case 'Let': {
+        const v = this.ev(n.value, env);
+        if (v instanceof KFn && !v.name) v.name = n.name;
+        env.define(n.name, v);
+        return null;
+      }
+      case 'Assign': return this.doAssign(n, env);
+      case 'Say': {
+        const parts = new Array(n.args.length);
+        for (let i = 0; i < parts.length; i++) parts[i] = this.str(this.ev(n.args[i], env));
+        this.curNode = n;
+        this.print(parts.join(' '));
+        return null;
+      }
+      case 'FnDecl': {
+        const cur = env.vars.get(n.name);
+        if (!(cur instanceof KFn && cur.decl === n)) {
+          const f = new KFn(n.name, n.params, n.body, env);
+          f.decl = n;
+          env.define(n.name, f);
+        }
+        return null;
+      }
+      case 'While': {
+        while (truthy(this.ev(n.cond, env))) {
+          this.scoped(n.body, env);
+          if (this.sig) { if (this.sig === 'break') { this.sig = null; break; } if (this.sig === 'continue') { this.sig = null; continue; } break; }
+        }
+        return null;
+      }
+      case 'Loop': {
+        const c = this.ev(n.count, env);
+        if (typeof c !== 'number' || !Number.isInteger(c) || c < 0) this.fail('"loop" needs a whole number of times, like  loop 3 times { ... }', n);
+        for (let i = 0; i < c; i++) {
+          this.scoped(n.body, env);
+          if (this.sig) { if (this.sig === 'break') { this.sig = null; break; } if (this.sig === 'continue') { this.sig = null; continue; } break; }
+        }
+        return null;
+      }
+      case 'For': return this.doFor(n, env);
+      case 'Stop': this.sig = 'break'; return null;
+      case 'Skip': this.sig = 'continue'; return null;
+      case 'Give': {
+        const v = n.value ? this.ev(n.value, env) : null;
+        this.retVal = v; this.sig = 'return';
+        return null;
+      }
+      case 'Try': {
+        try {
+          return this.scoped(n.body, env);
+        } catch (e) {
+          if (e instanceof KestralError && !e.fatal) {
+            const env2 = new Env(env);
+            if (n.name) env2.define(n.name, e.message);
+            return this.execBlock(n.handler, env2);
+          }
+          throw e;
+        }
+      }
+      case 'Fail': {
+        const v = this.ev(n.value, env);
+        this.fail(this.str(v), n);
+        break;
+      }
+      case 'Use': return this.doUse(n);
+      default: this.fail('Internal error: unknown node ' + n.type, n);
+    }
+    return null;
+  }
+
+  doAssign(n, env) {
+    const t = n.target;
+    const compound = n.op !== '=';
+    const apply = cur => this.binop(n.op[0], cur, this.ev(n.value, env), n);
+    if (t.type === 'Ident') {
+      const e = env.lookup(t.name);
+      if (!e) {
+        const sug = suggest(t.name, env.names());
+        this.fail(`"${t.name}" doesn't exist yet${sug ? ` (did you mean "${sug}"?)` : ''}. Create it first with  let ${t.name} = ...`, n);
+      }
+      e.vars.set(t.name, compound ? apply(e.vars.get(t.name)) : this.ev(n.value, env));
+      return null;
+    }
+    if (t.type === 'Index') {
+      const o = this.ev(t.obj, env), i = this.ev(t.index, env);
+      const v = compound ? apply(this.getIndex(o, i, t)) : this.ev(n.value, env);
+      this.setIndex(o, i, v, n);
+      return null;
+    }
+    const o = this.ev(t.obj, env);
+    if (!(o instanceof Map)) this.fail(`I can only set ".${t.name}" on a map, not on ${typeName(o) === 'nothing' ? 'nothing' : 'a ' + typeName(o)}.`, n);
+    const cur = o.has(t.name) ? o.get(t.name) : null;
+    o.set(t.name, compound ? apply(cur) : this.ev(n.value, env));
+    return null;
+  }
+
+  doFor(n, env) {
+    const it = this.ev(n.iter, env);
+    const [a, b] = n.names;
+    const body = n.body;
+    const step = (x, y) => {
+      const e = new Env(env);
+      e.define(a, x);
+      if (b) e.define(b, y);
+      this.execBlock(body, e);
+      if (this.sig) {
+        if (this.sig === 'break') { this.sig = null; return true; }
+        if (this.sig === 'continue') { this.sig = null; return false; }
+        return true;
+      }
+      return false;
+    };
+    if (Array.isArray(it)) {
+      for (let i = 0; i < it.length; i++) if (b ? step(i, it[i]) : step(it[i])) break;
+    } else if (typeof it === 'string') {
+      for (let i = 0; i < it.length; i++) if (b ? step(i, it[i]) : step(it[i])) break;
+    } else if (it instanceof KRange) {
+      const len = it.length;
+      for (let i = 0; i < len; i++) if (b ? step(i, it.at(i)) : step(it.at(i))) break;
+    } else if (it instanceof Map) {
+      for (const [k, v] of [...it]) if (b ? step(k, v) : step(k)) break;
+    } else {
+      this.fail(`I can't loop over ${typeName(it) === 'nothing' ? 'nothing' : 'a ' + typeName(it)}.${typeof it === 'number' ? ` Did you mean  loop ${it} times { ... }  or  for i in 1..${it} { ... } ?` : ''}`, n);
+    }
+    return null;
+  }
+
+  doUse(n) {
+    if (!this.opts.readFile) this.fail('"use" works when running .kes files from the command line.', n);
+    let p = n.path;
+    if (!/\.kes$/.test(p)) p += '.kes';
+    if (this.loaded.has(p)) return null;
+    this.loaded.add(p);
+    let text;
+    try { text = this.opts.readFile(p); }
+    catch (e) { this.fail(`I couldn't read the file "${p}".`, n); }
+    const ast = parse(text, 1);
+    const saved = [this.sig, this.retVal];
+    this.execBlock(ast, this.global);
+    this.sig = saved[0]; this.retVal = saved[1];
+    return null;
+  }
+}
+
+const STATEMENT_TYPES = new Set(['Let', 'Assign', 'Say', 'FnDecl', 'While', 'Loop', 'For', 'Stop', 'Skip', 'Give', 'Try', 'Fail', 'Use']);
+
+/* ------------------------------------------------------------------ *
+ *  Built-in functions
+ * ------------------------------------------------------------------ */
+function installBuiltins(I) {
+  const def = (name, min, max, fn) => I.define(name, new Builtin(name, min, max, fn));
+
+  const needNumber = (v, fname, what) => {
+    if (typeof v !== 'number') I.fail(`${fname}() needs ${what || 'a number'}, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+    return v;
+  };
+  const needText = (v, fname, what) => {
+    if (typeof v !== 'string') I.fail(`${fname}() needs ${what || 'text'}, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+    return v;
+  };
+  const needList = (v, fname, what) => {
+    if (!Array.isArray(v)) I.fail(`${fname}() needs ${what || 'a list'}, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+    return v;
+  };
+  const needFn = (v, fname) => {
+    if (!isFn(v)) I.fail(`${fname}() needs a function, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+    return v;
+  };
+  const items = (v, fname) => {
+    if (Array.isArray(v)) return v;
+    if (v instanceof KRange) { if (v.length > 5e6) I.fail('That range is too large.'); return v.toArray(); }
+    if (typeof v === 'string') return v.split('');
+    return I.fail(`${fname}() needs a list, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+  };
+  const call = (f, args) => I.callValue(f, args, I.curNode);
+  const arity = f => (f instanceof KFn ? f.params.length : 1);
+  const callItem = (f, item, i) => (arity(f) >= 2 ? call(f, [item, i]) : call(f, [item]));
+  const toIndex = (v, len, fname) => {
+    if (typeof v !== 'number' || !Number.isInteger(v)) I.fail(`${fname}() needs whole-number positions.`);
+    return v < 0 ? Math.max(0, v + len) : Math.min(v, len);
+  };
+  const compare = (a, b) => {
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    if (typeof a === 'string' && typeof b === 'string') return a < b ? -1 : a > b ? 1 : 0;
+    return I.fail(`sort() can only order numbers or text, and can't compare ${typeName(a)} with ${typeName(b)}.`);
+  };
+
+  /* input / types */
+  def('ask', 0, 1, function (prompt) {
+    const p = prompt === undefined ? '' : this.str(prompt);
+    const r = this.opts.ask ? this.opts.ask(p) : null;
+    return r === null || r === undefined ? null : String(r);
+  });
+  def('type', 1, 1, v => typeName(v));
+  def('str', 1, 1, v => I.str(v));
+  def('num', 1, 1, v => {
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') {
+      const t = v.trim();
+      if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(t)) return parseFloat(t);
+      I.fail(`I can't turn ${quote(v)} into a number.`);
+    }
+    return I.fail(`num() needs text or a number, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+  });
+  def('int', 1, 1, v => {
+    if (typeof v === 'string') { const t = v.trim(); if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(t)) I.fail(`I can't turn ${quote(v)} into a number.`); v = parseFloat(t); }
+    needNumber(v, 'int');
+    return Math.trunc(v);
+  });
+  def('list', 1, 1, v => {
+    if (v instanceof Map) return [...v.keys()];
+    return items(v, 'list').slice();
+  });
+  def('copy', 1, 1, v => (Array.isArray(v) ? v.slice() : v instanceof Map ? new Map(v) : v));
+
+  /* numbers */
+  def('abs', 1, 1, v => Math.abs(needNumber(v, 'abs')));
+  def('floor', 1, 1, v => Math.floor(needNumber(v, 'floor')));
+  def('ceil', 1, 1, v => Math.ceil(needNumber(v, 'ceil')));
+  def('sqrt', 1, 1, v => {
+    needNumber(v, 'sqrt');
+    if (v < 0) I.fail("I can't take the square root of a negative number.");
+    return Math.sqrt(v);
+  });
+  def('round', 1, 2, (v, d) => {
+    needNumber(v, 'round');
+    d = d === undefined ? 0 : needNumber(d, 'round', 'a number of digits');
+    const m = Math.pow(10, d);
+    const r = Math.sign(v) * Math.round((Math.abs(v) + Number.EPSILON * Math.abs(v)) * m) / m;
+    return r === 0 ? 0 : r;
+  });
+  const extreme = (name, pick) => def(name, 1, Infinity, function (...a) {
+    const xs = a.length === 1 && (Array.isArray(a[0]) || a[0] instanceof KRange) ? items(a[0], name) : a;
+    if (xs.length === 0) I.fail(`${name}() needs at least one number.`);
+    let best = needNumber(xs[0], name);
+    for (let i = 1; i < xs.length; i++) { needNumber(xs[i], name); if (pick(xs[i], best)) best = xs[i]; }
+    return best;
+  });
+  extreme('min', (x, b) => x < b);
+  extreme('max', (x, b) => x > b);
+  def('sum', 1, 1, v => {
+    let t = 0;
+    for (const x of items(v, 'sum')) t += needNumber(x, 'sum', 'a list of numbers');
+    return t;
+  });
+  def('random', 0, 0, () => (I.opts.random ? I.opts.random() : Math.random()));
+  def('randomInt', 2, 2, (lo, hi) => {
+    needNumber(lo, 'randomInt'); needNumber(hi, 'randomInt');
+    if (!Number.isInteger(lo) || !Number.isInteger(hi) || hi < lo) I.fail('randomInt(low, high) needs whole numbers with low <= high.');
+    const r = I.opts.random ? I.opts.random() : Math.random();
+    return lo + Math.floor(r * (hi - lo + 1));
+  });
+
+  /* collections */
+  def('len', 1, 1, v => {
+    if (typeof v === 'string' || Array.isArray(v)) return v.length;
+    if (v instanceof Map) return v.size;
+    if (v instanceof KRange) return v.length;
+    return I.fail(`len() needs text, a list or a map, but got ${typeName(v) === 'nothing' ? 'nothing' : 'a ' + typeName(v)}.`);
+  });
+  def('push', 2, Infinity, (l, ...vs) => { needList(l, 'push'); for (const v of vs) l.push(v); return l; });
+  def('pop', 1, 1, l => {
+    needList(l, 'pop');
+    if (l.length === 0) I.fail("I can't pop from an empty list.");
+    return l.pop();
+  });
+  def('remove', 2, 2, (c, k) => {
+    if (Array.isArray(c)) {
+      if (typeof k !== 'number' || !Number.isInteger(k)) I.fail('remove() needs a whole-number position for a list.');
+      const i = k < 0 ? k + c.length : k;
+      if (i < 0 || i >= c.length) I.fail(`Position ${k} is outside this list (it has ${c.length} item${c.length === 1 ? '' : 's'}).`);
+      return c.splice(i, 1)[0];
+    }
+    if (c instanceof Map) { const v = c.get(k); c.delete(k); return v === undefined ? null : v; }
+    return I.fail('remove() needs a list or a map.');
+  });
+  def('slice', 2, 3, (x, a, b) => {
+    if (typeof x !== 'string' && !Array.isArray(x) && !(x instanceof KRange)) I.fail('slice() needs text or a list.');
+    const arr = x instanceof KRange ? x.toArray() : x;
+    const from = toIndex(a, arr.length, 'slice');
+    const to = b === undefined ? arr.length : toIndex(b, arr.length, 'slice');
+    return arr.slice(from, Math.max(from, to));
+  });
+  def('reverse', 1, 1, x => {
+    if (typeof x === 'string') return x.split('').reverse().join('');
+    return items(x, 'reverse').slice().reverse();
+  });
+  def('sort', 1, 2, (l, key) => {
+    const a = items(l, 'sort').slice();
+    if (key === undefined) return a.sort(compare);
+    needFn(key, 'sort');
+    const keyed = a.map((v, i) => ({ v, k: call(key, [v]) }));
+    keyed.sort((x, y) => compare(x.k, y.k));
+    return keyed.map(o => o.v);
+  });
+  def('unique', 1, 1, l => {
+    const out = [];
+    for (const v of items(l, 'unique')) if (!out.some(o => eq(o, v))) out.push(v);
+    return out;
+  });
+  def('keys', 1, 1, m => { if (!(m instanceof Map)) I.fail('keys() needs a map.'); return [...m.keys()]; });
+  def('values', 1, 1, m => { if (!(m instanceof Map)) I.fail('values() needs a map.'); return [...m.values()]; });
+  def('entries', 1, 1, m => { if (!(m instanceof Map)) I.fail('entries() needs a map.'); return [...m].map(([k, v]) => [k, v]); });
+  def('contains', 2, 2, (c, x) => {
+    if (typeof c === 'string') return c.includes(needText(x, 'contains', 'text to look for'));
+    if (Array.isArray(c)) return c.some(v => eq(v, x));
+    if (c instanceof Map) return c.has(x);
+    if (c instanceof KRange) return c.contains(x);
+    return I.fail('contains() needs text, a list or a map.');
+  });
+  def('find', 2, 2, (c, x) => {
+    if (typeof c === 'string') return c.indexOf(needText(x, 'find', 'text to look for'));
+    if (Array.isArray(c)) { for (let i = 0; i < c.length; i++) if (eq(c[i], x)) return i; return -1; }
+    return I.fail('find() needs text or a list.');
+  });
+
+  /* higher-order */
+  def('map', 2, 2, (l, f) => {
+    needFn(f, 'map');
+    const a = items(l, 'map'), out = new Array(a.length);
+    for (let i = 0; i < a.length; i++) out[i] = callItem(f, a[i], i);
+    return out;
+  });
+  def('filter', 2, 2, (l, f) => {
+    needFn(f, 'filter');
+    const a = items(l, 'filter'), out = [];
+    for (let i = 0; i < a.length; i++) if (truthy(callItem(f, a[i], i))) out.push(a[i]);
+    return out;
+  });
+  def('reduce', 2, 3, (l, f, start) => {
+    needFn(f, 'reduce');
+    const a = items(l, 'reduce');
+    let i = 0, acc;
+    if (start === undefined) {
+      if (a.length === 0) I.fail('reduce() on an empty list needs a starting value: reduce(list, fn, start).');
+      acc = a[0]; i = 1;
+    } else acc = start;
+    for (; i < a.length; i++) acc = call(f, [acc, a[i]]);
+    return acc;
+  });
+  def('any', 2, 2, (l, f) => { needFn(f, 'any'); return items(l, 'any').some(v => truthy(call(f, [v]))); });
+  def('all', 2, 2, (l, f) => { needFn(f, 'all'); return items(l, 'all').every(v => truthy(call(f, [v]))); });
+
+  /* text */
+  def('upper', 1, 1, s => needText(s, 'upper').toUpperCase());
+  def('lower', 1, 1, s => needText(s, 'lower').toLowerCase());
+  def('trim', 1, 1, s => needText(s, 'trim').trim());
+  def('split', 1, 2, (s, sep) => {
+    needText(s, 'split');
+    if (sep === undefined) { const t = s.trim(); return t === '' ? [] : t.split(/\s+/); }
+    needText(sep, 'split', 'text to split on');
+    return s.split(sep);
+  });
+  def('join', 1, 2, (l, sep) => {
+    const a = items(l, 'join');
+    return a.map(v => I.str(v)).join(sep === undefined ? '' : needText(sep, 'join', 'text to put between items'));
+  });
+  def('replace', 3, 3, (s, a, b) => {
+    needText(s, 'replace'); needText(a, 'replace', 'text to look for'); needText(b, 'replace', 'replacement text');
+    return a === '' ? s : s.split(a).join(b);
+  });
+  def('startsWith', 2, 2, (s, p) => needText(s, 'startsWith').startsWith(needText(p, 'startsWith')));
+  def('endsWith', 2, 2, (s, p) => needText(s, 'endsWith').endsWith(needText(p, 'endsWith')));
+  def('repeat', 2, 2, (s, n) => I.repeatText(needText(s, 'repeat'), needNumber(n, 'repeat'), I.curNode));
+
+  /* misc */
+  def('assert', 1, 2, (c, msg) => {
+    if (!truthy(c)) I.fail(msg === undefined ? 'Assertion failed.' : I.str(msg));
+    return null;
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ *  Public API
+ * ------------------------------------------------------------------ */
+function formatError(err, source) {
+  if (!(err instanceof KestralError)) return 'Internal error: ' + (err && err.message ? err.message : err);
+  const label = err.phase === 'syntax' ? 'Syntax error' : 'Error';
+  let s = err.line ? `${label} on line ${err.line}: ${err.message}` : `${label}: ${err.message}`;
+  if (source && err.line) {
+    const lines = source.split('\n');
+    const text = lines[err.line - 1];
+    if (text !== undefined) {
+      const num = String(err.line);
+      s += `\n  ${num} | ${text}`;
+      if (err.col > 0) s += `\n  ${' '.repeat(num.length)} | ${' '.repeat(Math.max(0, err.col - 1))}^`;
+    }
+  }
+  return s;
+}
+
+/* Run a program once and collect everything. options: { input: [lines], echoPrompts, maxSteps, random } */
+function runProgram(source, options) {
+  options = options || {};
+  const lines = (options.input || []).slice();
+  const out = [];
+  const interp = new Interp({
+    print: s => out.push(s),
+    ask: p => {
+      const v = lines.length ? lines.shift() : null;
+      if (options.echoPrompts && v !== null) out.push(p + v);
+      else if (options.echoPrompts) out.push(p);
+      return v;
+    },
+    maxSteps: options.maxSteps,
+    maxOutput: options.maxOutput,
+    random: options.random,
+    readFile: options.readFile
+  });
+  let error = null;
+  try { interp.run(source); }
+  catch (e) { error = e; }
+  return {
+    ok: !error,
+    output: out,
+    text: out.join('\n'),
+    error,
+    errorText: error ? formatError(error, source) : ''
+  };
+}
+
+/* Check a learner's code against one lesson test.
+   test = { input: [lines], append: "code run after theirs", expect: "output" }
+   With `append`, only the output produced by the appended code is compared, so the learner's
+   own practice prints never cause a failure. */
+function runTest(code, test) {
+  const input = test.input || [];
+  const base = (test.prefix ? test.prefix + '\n' : '') + code;
+  const first = runProgram(base, { input, maxSteps: 2e6 });
+  if (!first.ok) return { ok: false, got: first.errorText, crashed: true, expect: test.expect };
+  if (!test.append) return { ok: first.text === test.expect, got: first.text, expect: test.expect };
+  const full = runProgram(base + '\n' + test.append, { input, maxSteps: 2e6 });
+  if (!full.ok) return { ok: false, got: full.errorText, crashed: true, expect: test.expect };
+  const tail = full.output.slice(first.output.length).join('\n');
+  return { ok: tail === test.expect, got: tail, expect: test.expect };
+}
+
+function builtinNames() {
+  return new Interp({}).global.names().sort();
+}
+
+return {
+  version: VERSION,
+  KestralError,
+  Interp,
+  create: opts => new Interp(opts),
+  parse,
+  run: runProgram,
+  runTest,
+  format: v => format(v, true),
+  formatError,
+  keywords: [...KEYWORDS],
+  builtinNames,
+  typeName
+};
+});
+</script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kestral;
+  var LESSONS = [{"id":1,"title":"Hello, Kestral","goal":"Print your first lines with say","intro":"A program is a list of instructions. Kestral reads them from top to bottom and does each one. Kestral programs are saved in files that end in `.kes`.\n\n## say\n\nThe `say` instruction prints something on the screen. Text goes inside quotes.\n\n```kes\nsay \"Hello, world!\"\nsay \"Kestral is small and friendly.\"\n```\n\nPress **Run** to see what it prints. Then change the words and run it again. You cannot break anything.\n\n## More than one value\n\nYou can give `say` several values separated by commas. Kestral puts a space between them.\n\n```kes\nsay \"I have\", 3, \"apples\"\nsay 2 + 3\n```\n\nNumbers do not need quotes. Kestral does the math first, so `say 2 + 3` prints `5`.\n\n## Comments\n\nAnything after `//` is a note for humans. Kestral ignores it.\n\n```kes\n// This line is only a note\nsay \"This line runs\" // so does this part, but not the note\n```\n\n## When something is wrong\n\nKestral tells you the line and what it did not understand. Here is a mistake on purpose (the word `say` is misspelled):\n\n```kes\n// error: this example is supposed to fail\nsay \"This line is fine\"\nsya \"This one is not\"\n```\n\nRead the message, fix the spelling, run again. Reading error messages is a real skill, and you will get fast at it.\n\n> **Rule to remember:** one instruction per line.","challenge":"Print exactly these two lines, in this order:\n\n```\nKestral flies!\nLesson 1 done\n```\n\nPress **Check answer** when your output matches.","starter":"// Write your two say lines below\n","solution":"say \"Kestral flies!\"\nsay \"Lesson 1 done\"\n","hints":["Each line you want to print needs its own `say`.","Text must be inside double quotes, and match exactly, including the capital letters and the exclamation mark."],"tests":[{"expect":"Kestral flies!\nLesson 1 done"}]},{"id":2,"title":"Names and Values","goal":"Store things with let, and talk to the user with ask","intro":"A **variable** is a name that holds a value. You create one with `let`.\n\n```kes\nlet name = \"Ada\"\nlet age = 36\nsay \"{name} is {age} years old.\"\n```\n\nInside text, anything in `{curly braces}` is replaced by its value. This is called **interpolation**, and you can put any expression in there: `\"{age + 1} next year\"`.\n\n## Changing a value\n\nAfter a name exists, change it with `=` (no `let` needed).\n\n```kes\nlet score = 10\nscore = score + 5\nscore += 1\nsay score\n```\n\n`score += 1` is a short way to write `score = score + 1`. The same idea works for `-=`, `*=`, `/=`, and `%=`.\n\n## Kinds of values\n\nEvery value has a type. Ask Kestral with `type()`.\n\n```kes\nsay type(42), type(\"hi\"), type(true), type(nothing)\n```\n\n- **number**: `42`, `3.14`, `-7`\n- **text**: `\"hello\"` or `'hello'`\n- **bool**: `true` or `false`\n- **nothing**: the value that means \"no value yet\"\n\n## Naming rules\n\nNames use letters, digits and `_`, and cannot start with a digit. Good names say what the value is: `totalPrice`, `user_name`. Kestral is case sensitive, so `Age` and `age` are different names.\n\n## Asking the user\n\n`ask` waits for the user to type a line and gives it back as **text**.\n\n```kes input=Ada\nlet who = ask(\"What is your name? \")\nsay \"Nice to meet you, {who}!\"\n```\n\n> In the Studio app, type the answers into the **Input** box (one answer per line) before you press Run.\n\nEven if the user types `5`, `ask` gives you the text `\"5\"`. To do math, convert it with `num`:\n\n```kes input=21\nlet n = num(ask(\"Pick a number: \"))\nsay n * 2\n```","challenge":"Write a program that asks for a name, then asks for an age, and then prints:\n\n```\nHello, Ada! Next year you will be 31.\n```\n\n(That is the output when the name is `Ada` and the age is `30`.) Ask for the name first, then the age. Do not print the questions: pass nothing to `ask`, or leave the text out of what you `say`.","starter":"let name = ask()\n// ask for the age next, then say the sentence\n","solution":"let name = ask()\nlet age = num(ask())\nsay \"Hello, {name}! Next year you will be {age + 1}.\"\n","hints":["The age arrives as text. Wrap it in `num( ... )` so you can add 1.","Use interpolation: `\"Hello, {name}! ...\"`, and put `{age + 1}` where the number goes."],"tests":[{"input":["Ada","30"],"expect":"Hello, Ada! Next year you will be 31."},{"input":["Kai","9"],"expect":"Hello, Kai! Next year you will be 10."}]},{"id":3,"title":"Numbers and Text","goal":"Do math, join text, and round results","intro":"## Math\n\n```kes\nsay 7 + 2, 7 - 2, 7 * 2, 7 / 2\nsay 7 % 2\nsay 2 ** 10\n```\n\n- `%` is the **remainder** after division. `7 % 2` is `1`, so `n % 2 == 0` is a handy test for even numbers.\n- `**` means \"to the power of\".\n- Brackets work like in school: `(2 + 3) * 4` is `20`.\n- `*` and `/` happen before `+` and `-`.\n- Dividing by zero is an error with a clear message, not a mystery number.\n\n## Tidy decimals\n\nComputers store decimals in binary, so tiny errors are normal in many languages. Kestral prints numbers tidily, and `round` gives you control.\n\n```kes\nsay 0.1 + 0.2\nsay round(3.14159, 2)\nsay round(2.5)\nsay floor(2.9), ceil(2.1)\nsay abs(-5), sqrt(81), min(4, 2, 9), max(4, 2, 9)\n```\n\n`round(x, 2)` keeps two decimal places. `floor` rounds down, `ceil` rounds up.\n\n## Joining text\n\n`+` joins text. If either side is text, the other side is turned into text.\n\n```kes\nlet first = \"Ada\"\nlet last = \"Lovelace\"\nsay first + \" \" + last\nsay \"Score: \" + 10\nsay \"ha\" * 3\n```\n\nInterpolation (`\"{first} {last}\"`) is usually neater than joining with `+`.\n\n## Length of text\n\n```kes\nsay len(\"kestral\")\n```","challenge":"Write a program that asks for a **price** and then a **quantity**, and prints the total including 10% tax, rounded to 2 decimal places, like this:\n\n```\nTotal: 22\n```\n\n(That is the output for a price of `10` and a quantity of `2`: 10 x 2 = 20, plus 10% is 22.) Note that `round` already gives you a clean number, so do not worry about trailing zeros.","starter":"let price = num(ask())\n// ask for the quantity next, then work out and say the total\n","solution":"let price = num(ask())\nlet qty = num(ask())\nlet total = price * qty * 1.1\nsay \"Total: {round(total, 2)}\"\n","hints":["Adding 10% is the same as multiplying by `1.1`.","`round(total, 2)` rounds to two decimal places."],"tests":[{"input":["10","2"],"expect":"Total: 22"},{"input":["9.99","3"],"expect":"Total: 32.97"},{"input":["5","1"],"expect":"Total: 5.5"}]},{"id":4,"title":"Making Decisions","goal":"Run code only when something is true","intro":"Programs get interesting when they can choose. Use `if`, and optionally `else`.\n\n```kes\nlet temp = 31\nif temp > 30 {\n  say \"Hot day. Drink water.\"\n} else if temp > 18 {\n  say \"Nice day.\"\n} else {\n  say \"Bring a jacket.\"\n}\n```\n\nThe code in `{ }` only runs when its condition is true. Kestral checks the conditions from the top and uses the first one that is true.\n\n## Comparing\n\n`==` equal, `!=` not equal, `\u003c` `\u003c=` `>` `>=`. Note that a single `=` stores a value, and a double `==` asks a question.\n\n```kes\nsay 5 == 5, 5 != 5, 3 \u003c 4, \"apple\" \u003c \"banana\"\n```\n\n## and, or, not\n\n```kes\nlet age = 25\nlet hasTicket = true\nif age >= 18 and hasTicket {\n  say \"Welcome in.\"\n}\nif age \u003c 13 or age > 65 {\n  say \"Discount price.\"\n} else {\n  say \"Full price.\"\n}\nsay not hasTicket\n```\n\n## What counts as true?\n\nIn a condition, these are **false**: `false`, `nothing`, `0`, and empty text `\"\"`. Everything else is true. That is why `if name { ... }` means \"if there is a name\".\n\n## if as a value\n\n`if` can produce a value, which is useful for small choices:\n\n```kes\nlet n = 7\nlet kind = if n % 2 == 0 { \"even\" } else { \"odd\" }\nsay \"{n} is {kind}\"\n```","challenge":"Read a score (a number) and print the letter grade:\n\n- 90 or more: `A`\n- 80 to 89: `B`\n- 70 to 79: `C`\n- 60 to 69: `D`\n- below 60: `F`","starter":"let score = num(ask())\n// say the grade letter\n","solution":"let score = num(ask())\nif score >= 90 {\n  say \"A\"\n} else if score >= 80 {\n  say \"B\"\n} else if score >= 70 {\n  say \"C\"\n} else if score >= 60 {\n  say \"D\"\n} else {\n  say \"F\"\n}\n","hints":["Check the highest grade first. Because only the first true condition runs, `score >= 90` goes before `score >= 80`.","Watch the boundaries. A score of exactly 80 is a `B`, so use `>=`, not `>`."],"tests":[{"input":["95"],"expect":"A"},{"input":["90"],"expect":"A"},{"input":["80"],"expect":"B"},{"input":["72"],"expect":"C"},{"input":["60"],"expect":"D"},{"input":["59"],"expect":"F"}]},{"id":5,"title":"Loops","goal":"Repeat work without repeating yourself","intro":"Computers are good at repeating things. Kestral has three loops.\n\n## loop N times\n\n```kes\nloop 3 times {\n  say \"Kestral!\"\n}\n```\n\n## for ... in\n\n`for` walks through a collection. `1..5` is a **range** that counts from 1 to 5, **including both ends**.\n\n```kes\nfor i in 1..5 {\n  say \"Number {i}\"\n}\nfor letter in \"abc\" {\n  say letter\n}\nfor fruit in [\"apple\", \"pear\", \"plum\"] {\n  say \"I like {fruit}\"\n}\n```\n\nA range can also count down: `5..1`.\n\n## while\n\n`while` repeats as long as its condition is true. Make sure something inside changes the condition, or it will never end. (Kestral stops runaway programs for you and tells you so.)\n\n```kes\nlet n = 1\nwhile n \u003c 100 {\n  n = n * 2\n}\nsay n\n```\n\n## stop and skip\n\n- `stop` leaves the loop immediately.\n- `skip` jumps to the next round.\n\n```kes\nfor i in 1..10 {\n  if i % 2 == 0 {\n    skip\n  }\n  if i > 7 {\n    stop\n  }\n  say i\n}\n```\n\n## Building up a result\n\nA very common pattern: start with a value, update it in the loop.\n\n```kes\nlet total = 0\nfor i in 1..100 {\n  total += i\n}\nsay total\n```","challenge":"Print the numbers from 1 to 15, one per line, but:\n\n- for multiples of 3, print `Fizz` instead of the number\n- for multiples of 5, print `Buzz` instead\n- for multiples of both 3 and 5, print `FizzBuzz`\n\nThis is the famous FizzBuzz puzzle. The first lines are `1`, `2`, `Fizz`, `4`, `Buzz`.","starter":"for i in 1..15 {\n  // decide what to say\n}\n","solution":"for i in 1..15 {\n  if i % 15 == 0 {\n    say \"FizzBuzz\"\n  } else if i % 3 == 0 {\n    say \"Fizz\"\n  } else if i % 5 == 0 {\n    say \"Buzz\"\n  } else {\n    say i\n  }\n}\n","hints":["`i % 3 == 0` is true when `i` is a multiple of 3.","Check the \"both\" case (multiple of 15) **first**. Otherwise a 15 would print just `Fizz`."],"tests":[{"expect":"1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz"}]},{"id":6,"title":"Functions","goal":"Give a name to a piece of work and reuse it","intro":"A **function** is a named recipe. You write it once with `fn`, then use it as often as you like.\n\n```kes\nfn greet(name) {\n  say \"Hello, {name}!\"\n}\n\ngreet(\"Ada\")\ngreet(\"Grace\")\n```\n\n`name` is a **parameter**: a name that holds whatever value you pass in. Calling `greet(\"Ada\")` runs the body with `name` set to `\"Ada\"`.\n\n## Giving a value back\n\nUse `give` to send a result back to the caller. (Some languages call this `return`.)\n\n```kes\nfn square(n) {\n  give n * n\n}\nsay square(7)\nsay square(square(2))\n```\n\nA function with no `give` hands back `nothing`.\n\n## One-line functions\n\nWhen the whole body is one expression, use `=>`:\n\n```kes\nfn add(a, b) => a + b\nsay add(2, 3)\n```\n\n## Default values\n\n```kes\nfn greet(name = \"friend\", mark = \"!\") {\n  give \"Hello, {name}{mark}\"\n}\nsay greet()\nsay greet(\"Ada\")\nsay greet(\"Ada\", \"?\")\n```\n\n## Scope\n\nNames created inside a function belong to that function and disappear when it finishes. A function can **read** names from the outside, which is how it can use other functions.\n\n```kes\nfn describe(n) {\n  let kind = if n % 2 == 0 { \"even\" } else { \"odd\" }\n  give \"{n} is {kind}\"\n}\nsay describe(4)\n// say kind    \u003c- this would be an error: kind only exists inside describe\n```\n\n## Functions can call themselves\n\nThis is called **recursion**. It needs a case that stops.\n\n```kes\nfn factorial(n) {\n  if n \u003c= 1 {\n    give 1\n  }\n  give n * factorial(n - 1)\n}\nsay factorial(10)\n```\n\nYou can also use a function before the line where it is written. Kestral reads the whole file first, so put your main program at the top if you like.","challenge":"Write two functions:\n\n- `double(n)` gives back `n` times 2\n- `isEven(n)` gives back `true` if `n` is even, otherwise `false`\n\nYou can add your own `say` lines to try them out. The checker runs its own calls after your code.","starter":"fn double(n) {\n  // your code\n}\n\nfn isEven(n) {\n  // your code\n}\n\n// try them:\nsay double(4)\nsay isEven(7)\n","solution":"fn double(n) {\n  give n * 2\n}\n\nfn isEven(n) {\n  give n % 2 == 0\n}\n","hints":["A function gives its answer back with `give`. If you forget, you get `nothing`.","`n % 2 == 0` is already `true` or `false`, so you can give it back directly."],"tests":[{"append":"say double(4)\nsay double(0)\nsay double(-3)","expect":"8\n0\n-6"},{"append":"say isEven(4)\nsay isEven(7)\nsay isEven(0)","expect":"true\nfalse\ntrue"}]},{"id":7,"title":"Lists","goal":"Keep many values in one place","intro":"A **list** holds values in order. Write one with square brackets.\n\n```kes\nlet fruits = [\"apple\", \"pear\", \"plum\"]\nsay fruits\nsay len(fruits)\nsay fruits[0]\nsay fruits[2]\nsay fruits[-1]\n```\n\nPositions start at **0**. A negative position counts from the end, so `fruits[-1]` is the last item.\n\n## Changing a list\n\n```kes\nlet nums = [10, 20, 30]\nnums[1] = 99\npush(nums, 40)\nsay nums\nsay pop(nums)\nsay nums\n```\n\n- `push(list, value)` adds to the end.\n- `pop(list)` removes and gives back the last item.\n- `remove(list, position)` removes the item at a position.\n\n## Looping over a list\n\n```kes\nlet scores = [88, 92, 75]\nlet total = 0\nfor s in scores {\n  total += s\n}\nsay \"Average: {total / len(scores)}\"\n```\n\nIf you want the position too, name two things:\n\n```kes\nfor i, name in [\"Ada\", \"Grace\"] {\n  say \"{i}: {name}\"\n}\n```\n\n## Handy tools\n\n```kes\nlet nums = [5, 3, 8, 1]\nsay sort(nums)\nsay reverse(nums)\nsay sum(nums), min(nums), max(nums)\nsay slice(nums, 1, 3)\nsay contains(nums, 8)\nsay [1, 2] + [3]\n```\n\n`slice(list, from, to)` copies part of a list (the `to` position is not included). `sort` and `reverse` give back a **new** list and leave the original alone.\n\n## A list is shared, not copied\n\n```kes\nlet a = [1, 2]\nlet b = a\npush(b, 3)\nsay a\nlet c = copy(a)\npush(c, 4)\nsay a, c\n```\n\n`a` and `b` are the same list under two names. Use `copy` when you want an independent one.\n\n## Lists inside lists\n\n```kes\nlet grid = [[1, 2], [3, 4]]\nsay grid[1][0]\n```","challenge":"Write a function `average(numbers)` that gives back the average of a list of numbers. Use a loop (or `sum` if you like). You can assume the list is not empty.","starter":"fn average(numbers) {\n  // your code\n}\n\nsay average([2, 4, 6])\n","solution":"fn average(numbers) {\n  let total = 0\n  for n in numbers {\n    total += n\n  }\n  give total / len(numbers)\n}\n","hints":["Add everything up first, then divide by `len(numbers)`.","Make sure the `give` is **after** the loop, not inside it."],"tests":[{"append":"say average([2, 4, 6])\nsay average([1, 2])\nsay average([10])","expect":"4\n1.5\n10"}]},{"id":8,"title":"Maps","goal":"Look values up by name","intro":"A **map** stores values under keys, like a tiny address book. Write one with curly braces.\n\n```kes\nlet person = {name: \"Ada\", age: 36, languages: [\"math\", \"poetry\"]}\nsay person\nsay person.name\nsay person[\"age\"]\nsay person.languages[0]\n```\n\nUse `.key` when the key is a simple name, or `[\"any key\"]` when it is not.\n\n## Changing a map\n\n```kes\nlet pet = {name: \"Kiwi\"}\npet.age = 3\npet[\"color\"] = \"green\"\npet.age += 1\nsay pet\n```\n\n## Missing keys give nothing\n\n```kes\nlet m = {a: 1}\nsay m.b\nsay m.b ?? \"no b here\"\n```\n\n`??` means \"use the right side if the left side is `nothing`\". It is perfect for default values.\n\n## Looking inside\n\n```kes\nlet stock = {apples: 5, pears: 0}\nsay keys(stock)\nsay values(stock)\nsay len(stock)\nsay contains(stock, \"apples\")\nfor item, count in stock {\n  say \"{item}: {count}\"\n}\n```\n\n## Counting things\n\nA map plus `??` is the classic way to count how often something appears:\n\n```kes\nlet votes = {}\nfor choice in [\"red\", \"blue\", \"red\", \"red\"] {\n  votes[choice] = (votes[choice] ?? 0) + 1\n}\nsay votes\n```\n\n## Maps hold anything, including functions\n\n```kes\nlet calc = {\n  add: fn(a, b) => a + b,\n  name: \"tiny calculator\"\n}\nsay calc.name\nsay calc.add(2, 3)\n```\n\nMaps keep their keys in the order you added them.","challenge":"Write a function `wordCount(text)` that gives back a map from each word to how many times it appears. Treat upper and lower case as the same word, so `\"Go go GO\"` counts `go` three times.\n\nHint: `split(text)` splits text into words, and `lower(text)` makes it lower case.","starter":"fn wordCount(text) {\n  let counts = {}\n  // your code\n  give counts\n}\n\nsay wordCount(\"the cat and the dog\")\n","solution":"fn wordCount(text) {\n  let counts = {}\n  for word in split(lower(text)) {\n    counts[word] = (counts[word] ?? 0) + 1\n  }\n  give counts\n}\n","hints":["Loop over `split(lower(text))`.","Inside the loop: `counts[word] = (counts[word] ?? 0) + 1`."],"tests":[{"append":"let c = wordCount(\"the cat the dog\")\nsay c[\"the\"]\nsay c[\"cat\"]\nsay len(c)","expect":"2\n1\n3"},{"append":"let c = wordCount(\"Go go GO\")\nsay c[\"go\"]\nsay len(c)","expect":"3\n1"},{"append":"say len(wordCount(\"\"))","expect":"0"}]},{"id":9,"title":"Working with Text","goal":"Slice, search and reshape words","intro":"Text is a row of characters. Many of the list tools work on text too.\n\n```kes\nlet word = \"kestral\"\nsay len(word)\nsay word[0]\nsay word[-1]\nsay slice(word, 0, 3)\nsay slice(word, 3)\nfor ch in word {\n  say ch\n}\n```\n\nText cannot be changed in place, but every tool below gives you a **new** piece of text.\n\n## Changing case and trimming\n\n```kes\nsay upper(\"hello\"), lower(\"HELLO\")\nsay \"[\" + trim(\"   padded   \") + \"]\"\n```\n\n## Searching\n\n```kes\nlet s = \"the quick brown fox\"\nsay contains(s, \"quick\")\nsay find(s, \"brown\")\nsay find(s, \"zebra\")\nsay startsWith(s, \"the\"), endsWith(s, \"dog\")\n```\n\n`find` gives the position of the first match, or `-1` when there is none.\n\n## Splitting and joining\n\n`split` turns text into a list of pieces. `join` does the opposite.\n\n```kes\nsay split(\"a,b,c\", \",\")\nsay split(\"  many   spaces here \")\nsay split(\"abc\", \"\")\nsay join([\"a\", \"b\", \"c\"], \"-\")\nsay join([1, 2, 3])\n```\n\nWith no separator, `split` cuts at spaces and ignores extra ones. With `\"\"` it gives you every character.\n\n## Replacing and repeating\n\n```kes\nsay replace(\"2024-01-15\", \"-\", \"/\")\nsay repeat(\"=-\", 5)\nsay reverse(\"stressed\")\n```\n\n## Method style\n\nAny built-in function can be written with a dot, with the first value in front. These two lines mean the same thing:\n\n```kes\nsay upper(\"hi\")\nsay \"hi\".upper()\n```\n\nDots make long chains easy to read from left to right:\n\n```kes\nsay \"  Hello, World  \".trim().lower().replace(\"world\", \"kestral\")\n```","challenge":"Write two functions:\n\n- `initials(name)` gives back the first letter of every word, capitalized, each followed by a dot. `initials(\"ada lovelace\")` is `\"A.L.\"`.\n- `isPalindrome(text)` gives back `true` if the text reads the same forwards and backwards, ignoring upper and lower case. `\"Racecar\"` is a palindrome and `\"Hello\"` is not.","starter":"fn initials(name) {\n  // your code\n}\n\nfn isPalindrome(text) {\n  // your code\n}\n\nsay initials(\"ada lovelace\")\nsay isPalindrome(\"Racecar\")\n","solution":"fn initials(name) {\n  let result = \"\"\n  for word in split(name) {\n    result += upper(word[0]) + \".\"\n  }\n  give result\n}\n\nfn isPalindrome(text) {\n  let t = lower(text)\n  give t == reverse(t)\n}\n","hints":["For `initials`: loop over `split(name)`, and use `word[0]` for the first letter.","Build the answer by adding to a text value that starts as `\"\"`.","For `isPalindrome`: compare `lower(text)` with `reverse(lower(text))`."],"tests":[{"append":"say initials(\"ada lovelace\")\nsay initials(\"grace brewster hopper\")\nsay initials(\"cher\")","expect":"A.L.\nG.B.H.\nC."},{"append":"say isPalindrome(\"Racecar\")\nsay isPalindrome(\"Hello\")\nsay isPalindrome(\"a\")","expect":"true\nfalse\ntrue"}]},{"id":10,"title":"Functions as Values","goal":"Pass functions around, and chain them into pipelines","intro":"In Kestral a function is a value, just like a number or text. You can store it, pass it to other functions and give it back.\n\n## Anonymous functions\n\n`fn(...) => ...` makes a function without a name.\n\n```kes\nlet triple = fn(x) => x * 3\nsay triple(5)\n```\n\n## map, filter, reduce\n\nThese three tools take a list and a function. They do the looping for you.\n\n```kes\nlet nums = [1, 2, 3, 4, 5, 6]\nsay map(nums, fn(n) => n * n)\nsay filter(nums, fn(n) => n % 2 == 0)\nsay reduce(nums, fn(total, n) => total + n, 0)\nsay any(nums, fn(n) => n > 5), all(nums, fn(n) => n > 5)\n```\n\n- `map` makes a new list by applying the function to each item.\n- `filter` keeps only the items where the function is true.\n- `reduce` folds the list into one value. The function gets the running total and the next item.\n\nYou can also sort by a rule:\n\n```kes\nlet words = [\"pear\", \"fig\", \"banana\"]\nsay sort(words, fn(w) => len(w))\n```\n\n## Pipelines\n\n`|>` feeds the value on its left into the function on its right. It lets you read a chain of steps from top to bottom.\n\n```kes\nlet result = [5, 2, 8, 1, 9, 3]\n  |> filter(fn(n) => n > 2)\n  |> sort\n  |> map(fn(n) => n * 10)\nsay result\n```\n\nWhen the right side is a call like `filter(fn...)`, the piped value becomes its **first** argument.\n\n## Functions that make functions\n\nA function can give back another function. The inner function remembers the values around it. This is called a **closure**.\n\n```kes\nfn makeCounter() {\n  let count = 0\n  give fn() {\n    count += 1\n    give count\n  }\n}\n\nlet a = makeCounter()\nlet b = makeCounter()\nsay a(), a(), a()\nsay b()\n```\n\nEach counter keeps its own `count`.","challenge":"Write two functions:\n\n- `makeAdder(n)` gives back a new function that adds `n` to whatever it is given. After `let add5 = makeAdder(5)`, `add5(3)` is `8`.\n- `evensSquared(numbers)` gives back a list of the squares of the even numbers only. `evensSquared([1, 2, 3, 4])` is `[4, 16]`.\n\nTry to write `evensSquared` with `filter` and `map`.","starter":"fn makeAdder(n) {\n  // give back a function\n}\n\nfn evensSquared(numbers) {\n  // your code\n}\n\nlet add5 = makeAdder(5)\nsay add5(3)\nsay evensSquared([1, 2, 3, 4])\n","solution":"fn makeAdder(n) {\n  give fn(x) => x + n\n}\n\nfn evensSquared(numbers) {\n  give numbers\n    |> filter(fn(x) => x % 2 == 0)\n    |> map(fn(x) => x * x)\n}\n","hints":["`makeAdder` is one line: `give fn(x) => x + n`.","Filter first (keep the even numbers), then map (square them)."],"tests":[{"append":"let add5 = makeAdder(5)\nsay add5(3)\nsay makeAdder(10)(1)\nsay makeAdder(0)(7)","expect":"8\n11\n7"},{"append":"say evensSquared([1, 2, 3, 4])\nsay evensSquared([1, 3])\nsay evensSquared([6])","expect":"[4, 16]\n[]\n[36]"}]},{"id":11,"title":"When Things Go Wrong","goal":"Read error messages, and handle problems on purpose","intro":"Every programmer sees errors all day long. They are not failures, they are directions.\n\n## Reading an error\n\n```\nError on line 3: I don't know \"scor\". Did you mean \"score\"?\n  3 | say scor\n    |     ^\n```\n\nIt tells you the **line**, shows the line itself, points at the spot with `^`, and often suggests a fix. Always read the message before you change anything.\n\nThere are two families:\n\n- **Syntax errors**: the code is not shaped correctly (a missing `}`, an unclosed quote). Kestral finds these before running anything.\n- **Runtime errors**: the shape is fine, but something impossible happens while running (dividing by zero, a missing name, a list position that does not exist).\n\n## try and catch\n\nWhen something might fail, wrap it in `try`. If it fails, Kestral jumps to `catch` instead of stopping your program.\n\n```kes\ntry {\n  let n = num(\"not a number\")\n  say n\n} catch problem {\n  say \"Oops: {problem}\"\n}\nsay \"The program keeps going.\"\n```\n\n`problem` is a name you choose. It holds the error message as text.\n\n## Making your own errors with fail\n\nUse `fail` when your code notices something wrong.\n\n```kes\nfn safeDivide(a, b) {\n  if b == 0 {\n    fail \"cannot divide {a} by zero\"\n  }\n  give a / b\n}\n\ntry {\n  say safeDivide(10, 2)\n  say safeDivide(1, 0)\n} catch e {\n  say \"Problem: {e}\"\n}\n```\n\n## assert\n\n`assert(condition, message)` is a quick sanity check. It does nothing when the condition is true and fails with your message when it is false.\n\n```kes\nlet age = 20\nassert(age >= 0, \"age cannot be negative\")\nsay \"age is fine\"\n```\n\n## Runaway programs\n\nKestral stops programs that loop forever or recurse without end, and explains why. Those errors cannot be caught with `try`, because the program is not behaving, it is stuck.","challenge":"Write a function `parseAge(text)` that turns text into an age:\n\n- If `text` is a valid number that is 0 or more, give back the number.\n- Otherwise give back `-1`.\n\nSo `parseAge(\"42\")` is `42`, while `parseAge(\"abc\")`, `parseAge(\"\")` and `parseAge(\"-5\")` are all `-1`.","starter":"fn parseAge(text) {\n  // your code\n}\n\nsay parseAge(\"42\")\nsay parseAge(\"abc\")\n","solution":"fn parseAge(text) {\n  try {\n    let n = num(text)\n    if n \u003c 0 {\n      give -1\n    }\n    give n\n  } catch e {\n    give -1\n  }\n}\n","hints":["`num(text)` fails on bad text, so put it inside `try`.","Check for negative numbers separately. `-5` converts fine but is not a valid age."],"tests":[{"append":"say parseAge(\"42\")\nsay parseAge(\"3.5\")\nsay parseAge(\"0\")","expect":"42\n3.5\n0"},{"append":"say parseAge(\"abc\")\nsay parseAge(\"\")\nsay parseAge(\"-5\")","expect":"-1\n-1\n-1"}]},{"id":12,"title":"Matching","goal":"Choose between many cases cleanly","intro":"A long `if / else if` ladder works, but `match` reads better when you compare one value against many options.\n\n```kes\nlet day = 3\nlet name = match day {\n  1 => \"Monday\"\n  2 => \"Tuesday\"\n  3 => \"Wednesday\"\n  else => \"Some other day\"\n}\nsay name\n```\n\nKestral tries each line from the top. The first one that fits wins, and `else` catches everything else. `match` produces a value, so you can store it, give it back or print it.\n\n## Several values on one line\n\n```kes\nfn describe(n) {\n  give match n {\n    0 => \"none\"\n    1, 2, 3 => \"a few\"\n    else => \"many\"\n  }\n}\nsay describe(0), describe(2), describe(50)\n```\n\n## Ranges\n\nA range such as `90..100` matches any number from 90 to 100.\n\n```kes\nfn grade(score) {\n  give match score {\n    90..100 => \"A\"\n    80..89 => \"B\"\n    70..79 => \"C\"\n    else => \"keep going\"\n  }\n}\nsay grade(95), grade(81), grade(12)\n```\n\nA range covers everything from its first number to its last. A score such as `89.5` falls in the gap between `80..89` and `90..100`, so it would reach `else`. If your numbers can have decimals, use `if` with `>=`, as in lesson 4.\n\n## Doing things in a match\n\nA line can run a statement, or a block with several steps:\n\n```kes\nmatch \"stop\" {\n  \"go\" => say \"Green light\"\n  \"stop\" => {\n    say \"Red light\"\n    say \"Wait here\"\n  }\n  else => say \"Unknown signal\"\n}\n```\n\nIf nothing matches and there is no `else`, the result is `nothing`.","challenge":"Write a function `dayType(n)` for day numbers (1 = Monday ... 7 = Sunday):\n\n- 1 to 5 gives `\"weekday\"`\n- 6 or 7 gives `\"weekend\"`\n- anything else gives `\"invalid\"`\n\nUse `match`.","starter":"fn dayType(n) {\n  give match n {\n    // your lines here\n  }\n}\n\nsay dayType(2)\nsay dayType(7)\n","solution":"fn dayType(n) {\n  give match n {\n    1..5 => \"weekday\"\n    6, 7 => \"weekend\"\n    else => \"invalid\"\n  }\n}\n","hints":["`1..5 => \"weekday\"` covers the weekdays in one line.","Do not forget `else => \"invalid\"` for numbers like 0 or 8."],"tests":[{"append":"say dayType(1)\nsay dayType(5)\nsay dayType(6)\nsay dayType(7)\nsay dayType(0)\nsay dayType(8)","expect":"weekday\nweekday\nweekend\nweekend\ninvalid\ninvalid"}]},{"id":13,"title":"Capstone: Number Cruncher","goal":"Put everything together in a real program","intro":"You now know the whole language. Time to build something with it. A good way to tackle any program is in small steps:\n\n1. Say in plain words what it should do.\n2. Get the simplest version working.\n3. Add one feature at a time, running after each.\n\n## Reading input until it ends\n\nHere is the pattern for \"keep asking until the user types `done`\". `ask()` gives back `nothing` when there is no more input, so we stop on that too.\n\n```kes input=Ada|Grace|Linus|done\nlet names = []\nwhile true {\n  let line = ask()\n  if line == nothing or line == \"done\" {\n    stop\n  }\n  push(names, line)\n}\nsay \"You entered {len(names)} names: {join(names, \", \")}\"\n```\n\n(In the Studio, put one answer per line in the Input box.)\n\n## Mixing the tools you know\n\n- a `while true` loop with `stop`\n- `try` and `catch` to survive bad input\n- a list to collect values\n- `sum`, `max` and `round` for the results\n\nTake it one step at a time, and run your program often.","challenge":"Write a program that reads lines until the user types `done` (or the input ends). For each line:\n\n- if it is a number, remember it\n- if it is not, print `Skipping: ` followed by the line, and carry on\n\nAt the end, print four lines:\n\n```\nCount: 6\nTotal: 108\nAverage: 18\nLargest: 42\n```\n\nRound the average to 2 decimal places. If no numbers were entered, print only `No numbers entered.` instead.\n\nTest inputs: `4 8 15 16 23 42 done` gives the output above, and `x 5 done` prints `Skipping: x` first.","starter":"let numbers = []\n\nwhile true {\n  let line = ask()\n  if line == nothing or line == \"done\" {\n    stop\n  }\n  // try to turn the line into a number and remember it\n}\n\n// print the results\n","solution":"let numbers = []\n\nwhile true {\n  let line = ask()\n  if line == nothing or line == \"done\" {\n    stop\n  }\n  try {\n    push(numbers, num(line))\n  } catch e {\n    say \"Skipping: {line}\"\n  }\n}\n\nif len(numbers) == 0 {\n  say \"No numbers entered.\"\n} else {\n  say \"Count: {len(numbers)}\"\n  say \"Total: {sum(numbers)}\"\n  say \"Average: {round(sum(numbers) / len(numbers), 2)}\"\n  say \"Largest: {max(numbers)}\"\n}\n","hints":["Put `num(line)` inside `try`. If it fails, `catch` prints the `Skipping:` message.","After the loop, check `len(numbers) == 0` first.","`sum(numbers)` and `max(numbers)` save you from writing more loops."],"tests":[{"input":["4","8","15","16","23","42","done"],"expect":"Count: 6\nTotal: 108\nAverage: 18\nLargest: 42"},{"input":["2.5","3","done"],"expect":"Count: 2\nTotal: 5.5\nAverage: 2.75\nLargest: 3"},{"input":["x","5","done"],"expect":"Skipping: x\nCount: 1\nTotal: 5\nAverage: 5\nLargest: 5"},{"input":["done"],"expect":"No numbers entered."},{"input":["7","1"],"expect":"Count: 2\nTotal: 8\nAverage: 4\nLargest: 7"}]}];
+  var REF = {"syntax":[{"title":"Basics","code":"// a comment\nsay \"Hello\", 42, true     // print values, separated by spaces\nlet name = \"Ada\"          // create a name\nname = \"Grace\"            // change it later\nsay \"Hi {name}, {1 + 2}\"  // {…} puts values inside text\nlet a = 1; let b = 2     // ; also separates statements","note":"One statement per line. Names use letters, digits and underscores."},{"title":"Values","code":"42   3.14   -7           // numbers\n\"text\"   'text'           // text (both quote styles work)\ntrue   false               // bools\nnothing                    // no value\n[1, 2, 3]                  // list\n{name: \"Ada\", age: 36}     // map\n1..5                       // range (includes both ends, can count down: 5..1)","note":"Falsy values: false, nothing, 0 and \"\". Everything else is true."},{"title":"Operators","code":"+  -  *  /  %  **          // math (% is remainder, ** is power)\n==  !=  \u003c  \u003c=  >  >=        // comparing\nand   or   not             // logic (and / or return one of their sides)\na ?? b                     // b only when a is nothing\n\"a\" + \"b\"   \"ab\" * 3      // join and repeat text\n[1] + [2]                  // join lists\nx |> f   x |> f(2)         // pipe: f(x)   f(x, 2)\nx += 1   x -= 1   x *= 2   // shortcuts","note":"Precedence, high to low: **, unary -, * / %, + -, .., comparisons, not, and, or, ??, |>."},{"title":"Decisions","code":"if score >= 90 {\n  say \"A\"\n} else if score >= 80 {\n  say \"B\"\n} else {\n  say \"C\"\n}\nlet kind = if n % 2 == 0 { \"even\" } else { \"odd\" }","note":"if is also a value. Conditions need no brackets."},{"title":"Match","code":"let word = match n {\n  0 => \"none\"\n  1, 2, 3 => \"few\"\n  4..9 => \"some\"\n  else => \"many\"\n}","note":"First matching line wins. A line can be a value, a statement, or a { block }."},{"title":"Loops","code":"loop 3 times { say \"hi\" }\nfor i in 1..5 { say i }\nfor item in [\"a\", \"b\"] { say item }\nfor i, item in [\"a\", \"b\"] { say i, item }\nfor key, value in {a: 1} { say key, value }\nwhile x \u003c 100 { x *= 2 }\nstop    // leave the loop\nskip    // next round","note":"for also walks through text, ranges and map keys."},{"title":"Functions","code":"fn add(a, b) {\n  give a + b\n}\nfn square(n) => n * n\nfn greet(name = \"friend\") => \"Hi {name}\"\nlet triple = fn(x) => x * 3\nsay add(1, 2), square(4), greet()","note":"give sends a value back. Functions can be used above the line that declares them. They can be stored, passed around and returned (closures)."},{"title":"Lists and maps","code":"let xs = [10, 20, 30]\nsay xs[0], xs[-1], len(xs)\nxs[1] = 99\npush(xs, 40)\nlet m = {a: 1}\nm.b = 2\nm[\"c\"] = 3\nsay m.a, m[\"b\"], m.missing    // missing keys give nothing","note":"Lists start at position 0; negative positions count from the end. Lists and maps are shared when assigned, use copy() for an independent one."},{"title":"Errors","code":"try {\n  fail \"something broke\"\n} catch e {\n  say \"caught: {e}\"\n}\nassert(1 + 1 == 2, \"math is broken\")","note":"e holds the error message as text. Runaway loops and runaway recursion cannot be caught."},{"title":"Methods and files","code":"say \"hi\".upper()                 // same as upper(\"hi\")\nsay [3, 1, 2].sort().reverse()\nuse \"tools.kes\"                  // load another file (command line)","note":"Any built-in or function you define can be called with a dot, with the first value in front."}],"builtins":[{"group":"Input and conversion","items":[{"name":"ask","sig":"ask(prompt?)","desc":"Reads one line of input as text. Gives nothing when the input has run out."},{"name":"type","sig":"type(value)","desc":"The type as text: \"number\", \"text\", \"bool\", \"list\", \"map\", \"function\", \"range\" or \"nothing\"."},{"name":"str","sig":"str(value)","desc":"Turns any value into text."},{"name":"num","sig":"num(text)","desc":"Turns text like \"3.5\" into a number. Fails if it is not a number."},{"name":"int","sig":"int(value)","desc":"A number (or number-like text) with the decimals cut off."},{"name":"list","sig":"list(value)","desc":"Makes a list from a range, text (its characters) or a map (its keys)."},{"name":"copy","sig":"copy(value)","desc":"A new, independent copy of a list or map."}]},{"group":"Numbers","items":[{"name":"abs","sig":"abs(n)","desc":"Distance from zero: abs(-3) is 3."},{"name":"floor","sig":"floor(n)","desc":"Rounds down."},{"name":"ceil","sig":"ceil(n)","desc":"Rounds up."},{"name":"sqrt","sig":"sqrt(n)","desc":"Square root."},{"name":"round","sig":"round(n, digits?)","desc":"Rounds to the nearest whole number, or to a number of decimal places."},{"name":"min","sig":"min(a, b, ...)  or  min(list)","desc":"The smallest number."},{"name":"max","sig":"max(a, b, ...)  or  max(list)","desc":"The largest number."},{"name":"sum","sig":"sum(list)","desc":"Adds up a list of numbers."},{"name":"random","sig":"random()","desc":"A random decimal from 0 up to (not including) 1."},{"name":"randomInt","sig":"randomInt(low, high)","desc":"A random whole number from low to high, both included."}]},{"group":"Lists, maps and ranges","items":[{"name":"len","sig":"len(value)","desc":"How many items (or characters, or keys)."},{"name":"push","sig":"push(list, value, ...)","desc":"Adds to the end of a list. Gives the list back."},{"name":"pop","sig":"pop(list)","desc":"Removes and gives back the last item."},{"name":"remove","sig":"remove(list, position)  or  remove(map, key)","desc":"Removes an item and gives it back."},{"name":"slice","sig":"slice(value, from, to?)","desc":"A piece of a list or text. `to` is not included. Negative positions count from the end."},{"name":"reverse","sig":"reverse(value)","desc":"A reversed copy of a list or text."},{"name":"sort","sig":"sort(list, key?)","desc":"A sorted copy. With a function, sorts by what the function gives for each item."},{"name":"unique","sig":"unique(list)","desc":"A copy with duplicates removed."},{"name":"keys","sig":"keys(map)","desc":"A list of the keys."},{"name":"values","sig":"values(map)","desc":"A list of the values."},{"name":"entries","sig":"entries(map)","desc":"A list of [key, value] pairs."},{"name":"contains","sig":"contains(thing, x)","desc":"True if text contains the text x, a list holds x, a map has the key x, or a range includes x."},{"name":"find","sig":"find(thing, x)","desc":"Position of x in text or a list, or -1 when it is not there."}]},{"group":"Working with functions","items":[{"name":"map","sig":"map(list, fn)","desc":"A new list made by applying fn to every item. If fn takes two parameters it also gets the position."},{"name":"filter","sig":"filter(list, fn)","desc":"Keeps the items for which fn gives something true."},{"name":"reduce","sig":"reduce(list, fn, start?)","desc":"Folds a list into one value. fn gets (total so far, next item)."},{"name":"any","sig":"any(list, fn)","desc":"True if fn is true for at least one item."},{"name":"all","sig":"all(list, fn)","desc":"True if fn is true for every item."}]},{"group":"Text","items":[{"name":"upper","sig":"upper(text)","desc":"UPPER CASE."},{"name":"lower","sig":"lower(text)","desc":"lower case."},{"name":"trim","sig":"trim(text)","desc":"Removes spaces at both ends."},{"name":"split","sig":"split(text, separator?)","desc":"Cuts text into a list. With no separator it splits on spaces; with \"\" it gives every character."},{"name":"join","sig":"join(list, separator?)","desc":"Glues the items of a list into one text."},{"name":"replace","sig":"replace(text, old, new)","desc":"Replaces every old with new."},{"name":"startsWith","sig":"startsWith(text, start)","desc":"True if the text begins with start."},{"name":"endsWith","sig":"endsWith(text, end)","desc":"True if the text ends with end."},{"name":"repeat","sig":"repeat(text, times)","desc":"The text repeated. Same as text * times."}]},{"group":"Checking","items":[{"name":"assert","sig":"assert(condition, message?)","desc":"Does nothing when the condition is true. Fails with the message when it is false."}]}]};
+  var EXAMPLES = [{"file":"bank_account.kes","title":"Bank account (closures)","lib":false,"code":"// Closures + maps: each account keeps its own private balance.\nfn makeAccount(owner, opening = 0) {\n  let balance = opening\n  let history = []\n\n  fn deposit(amount) {\n    if amount \u003c= 0 {\n      fail \"deposits must be positive\"\n    }\n    balance += amount\n    push(history, \"+{amount}\")\n  }\n\n  fn withdraw(amount) {\n    if amount > balance {\n      fail \"not enough money (balance is {balance})\"\n    }\n    balance -= amount\n    push(history, \"-{amount}\")\n  }\n\n  give {\n    owner: owner,\n    deposit: deposit,\n    withdraw: withdraw,\n    balance: fn() => balance,\n    history: fn() => history\n  }\n}\n\nlet acct = makeAccount(\"Ada\", 100)\nacct.deposit(50)\nacct.withdraw(30)\ntry {\n  acct.withdraw(500)\n} catch problem {\n  say \"Refused:\", problem\n}\ntry {\n  acct.deposit(-5)\n} catch problem {\n  say \"Refused:\", problem\n}\nsay \"{acct.owner} has {acct.balance()}\"\nsay \"History:\", join(acct.history(), \" \")\n","input":""},{"file":"fibonacci.kes","title":"Fibonacci, two ways","lib":false,"code":"// Fibonacci two ways: a simple loop, and recursion with a memory (a map).\nfn fibLoop(n) {\n  let a = 0\n  let b = 1\n  loop n times {\n    let next = a + b\n    a = b\n    b = next\n  }\n  give a\n}\n\nlet memo = {}\nfn fibMemo(n) {\n  if n \u003c 2 {\n    give n\n  }\n  if memo[n] != nothing {\n    give memo[n]\n  }\n  let result = fibMemo(n - 1) + fibMemo(n - 2)\n  memo[n] = result\n  give result\n}\n\nsay \"First 15:\", join(map(0..14, fibLoop), \", \")\nsay \"fib(40) with a loop:\", fibLoop(40)\nsay \"fib(40) with memory:\", fibMemo(40)\n","input":""},{"file":"hello.kes","title":"Hello, world","lib":false,"code":"// The classic first program.\nsay \"Hello, world!\"\nsay \"Welcome to Kestral\", 1 + 0, \"point oh\"\n","input":""},{"file":"primes.kes","title":"Prime numbers","lib":false,"code":"// Print every prime number up to a limit.\nfn isPrime(n) {\n  if n \u003c 2 {\n    give false\n  }\n  for d in 2..n {\n    if d * d > n {\n      stop\n    }\n    if n % d == 0 {\n      give false\n    }\n  }\n  give true\n}\n\nlet primes = filter(1..50, isPrime)\nsay \"Primes up to 50:\"\nsay join(primes, \" \")\nsay \"That is {len(primes)} primes.\"\n","input":""},{"file":"temperature.kes","title":"Temperature converter","lib":false,"code":"// Convert a Celsius temperature to Fahrenheit, with a comment on how it feels.\nlet c = num(ask(\"Degrees Celsius? \"))\nlet f = c * 9 / 5 + 32\nsay \"{c}C is {round(f, 1)}F\"\nsay match c {\n  -100..0 => \"Freezing!\"\n  1..15 => \"Chilly.\"\n  16..25 => \"Pleasant.\"\n  else => \"Hot!\"\n}\n","input":"21"},{"file":"tools.kes","title":"tools.kes (helper library)","lib":true,"code":"// A tiny library, loaded by uses_tools.kes with: use \"tools.kes\"\nfn double(n) => n * 2\nfn clamp(n, low, high) => max(low, min(n, high))\nfn titleCase(text) {\n  let words = split(text)\n  give join(map(words, fn(w) => upper(w[0]) + slice(w, 1)), \" \")\n}\n","input":""},{"file":"uses_tools.kes","title":"Using another file (use)","lib":false,"code":"use \"tools.kes\"\nsay double(21)\nsay clamp(150, 0, 100), clamp(-5, 0, 100)\nsay titleCase(\"the kestral hovers over the field\")\n","input":""},{"file":"word_frequency.kes","title":"Word frequency","lib":false,"code":"// Reads one line of text and shows the most common words.\nlet text = ask(\"Type some text: \")\nlet counts = {}\nfor word in split(lower(text)) {\n  let clean = replace(replace(replace(word, \".\", \"\"), \",\", \"\"), \"!\", \"\")\n  if clean != \"\" {\n    counts[clean] = (counts[clean] ?? 0) + 1\n  }\n}\n\nlet ranked = sort(entries(counts), fn(pair) => -pair[1])\nfor pair in slice(ranked, 0, 3) {\n  say \"{pair[0]}: {pair[1]}\"\n}\n","input":"the cat and the hat. The cat sat!"}];
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- storage (every access is guarded) ---------- */
+  var KEY = 'kestral.studio.v1';
+  var state = { done: {}, code: {}, input: {}, play: null, playInput: '', theme: null };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var s = JSON.parse(raw); if (s && typeof s === 'object') for (var k in state) if (s[k] !== undefined) state[k] = s[k]; }
+  } catch (e) { /* storage unavailable: carry on without it */ }
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }, 250);
+  }
+
+  /* ---------- helpers ---------- */
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  function copyText(text, btn) {
+    var done = function () { if (!btn) return; var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = o; }, 1400); };
+    var fallback = function () {
+      var t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:absolute;left:-9999px;top:0';
+      document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(t);
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  }
+
+  /* ---------- syntax highlighting ---------- */
+  var KW = {}; K.keywords.forEach(function (w) { KW[w] = 1; });
+  var BI = {}; K.builtinNames().forEach(function (w) { BI[w] = 1; });
+  var LIT = { 'true': 1, 'false': 1, 'nothing': 1 };
+  function hl(code) {
+    var re = /(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?)|(\b\d+(?:\.\d+)?)|([A-Za-z_]\w*)|(\|>|=>|\.\.|\*\*|\?\?|[=<>!+\-*\/%]=?)/g;
+    var out = '', last = 0, m, prev = '';
+    while ((m = re.exec(code))) {
+      var gap = code.slice(last, m.index);
+      if (/\S/.test(gap)) prev = '';
+      out += esc(gap);
+      last = re.lastIndex;
+      if (m[1]) out += '<span class="t-c">' + esc(m[1]) + '</span>';
+      else if (m[2]) out += '<span class="t-s">' + esc(m[2]).replace(/(\\\{)|(\{[^{}\n]*\})/g, function (x, a) { return a ? a : '<span class="t-i">' + x + '</span>'; }) + '</span>';
+      else if (m[3]) out += '<span class="t-n">' + m[3] + '</span>';
+      else if (m[4]) {
+        var w = m[4], cls = '';
+        if (LIT[w]) cls = 't-l';
+        else if (KW[w]) cls = 't-k';
+        else if (prev === 'fn') cls = 't-f';
+        else if (BI[w] && code.charAt(last) === '(') cls = 't-b';
+        out += cls ? '<span class="' + cls + '">' + w + '</span>' : w;
+        prev = w;
+        continue;
+      } else out += '<span class="t-o">' + esc(m[5]) + '</span>';
+      prev = '';
+    }
+    return out + esc(code.slice(last));
+  }
+
+  /* ---------- editor ---------- */
+  function makeEditor(host, o) {
+    host.innerHTML = '<div class="editor"><div class="gut" aria-hidden="true"><div class="gin"></div></div><div class="stack"><pre aria-hidden="true"><code></code></pre><textarea wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea></div></div>';
+    var ed = host.firstChild, gut = ed.querySelector('.gin'), gutBox = ed.querySelector('.gut');
+    var pre = ed.querySelector('pre'), code = pre.firstChild, ta = ed.querySelector('textarea'), stack = ed.querySelector('.stack');
+    ta.setAttribute('aria-label', o.label || 'Code editor');
+    var LH = 21, errLine = 0, tabFree = false;
+    function refresh() {
+      var v = ta.value, n = v.split('\n').length;
+      code.innerHTML = hl(v) + '\n';
+      var g = '';
+      for (var i = 1; i <= n; i++) g += '<div' + (i === errLine ? ' class="err"' : '') + '>' + i + '</div>';
+      gut.innerHTML = g;
+      var rows = Math.max(o.minRows || 9, Math.min(o.maxRows || 14, n + 1));
+      stack.style.height = (rows * LH + 24) + 'px';
+      sync();
+    }
+    function sync() {
+      pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft;
+      gut.style.transform = 'translateY(' + (-ta.scrollTop) + 'px)';
+    }
+    function insert(text) {
+      var ok = false;
+      try { ok = document.execCommand('insertText', false, text); } catch (e) {}
+      if (!ok) { ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end'); ta.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
+    ta.addEventListener('scroll', sync);
+    ta.addEventListener('input', function () { errLine = 0; refresh(); if (o.onChange) o.onChange(ta.value); });
+    ta.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (o.onRun) o.onRun(); return; }
+      if (e.key === 'Escape') { tabFree = true; return; }
+      if (e.key === 'Tab' && !e.shiftKey && !tabFree) { e.preventDefault(); insert('  '); return; }
+      if (e.key !== 'Tab' && e.key !== 'Shift') tabFree = false;
+      if (e.key === '}' && !e.ctrlKey && !e.metaKey && !e.altKey && ta.selectionStart === ta.selectionEnd) {
+        var cs = ta.selectionStart, cl = ta.value.lastIndexOf('\n', cs - 1) + 1, pfx = ta.value.slice(cl, cs);
+        if (pfx.length >= 2 && /^ +$/.test(pfx)) { e.preventDefault(); ta.setSelectionRange(cs - 2, cs); insert('}'); return; }
+      }
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        var v = ta.value, s = ta.selectionStart, e2 = ta.selectionEnd;
+        var ls = v.lastIndexOf('\n', s - 1) + 1;
+        var ind = /^[ \t]*/.exec(v.slice(ls, s))[0];
+        var open = v.charAt(s - 1) === '{', extra = open ? '  ' : '';
+        var text = '\n' + ind + extra, caret = text.length;
+        if (open && v.charAt(e2) === '}') text += '\n' + ind;
+        insert(text);
+        var pos = s + caret - (e2 > s ? 0 : 0);
+        ta.setSelectionRange(pos, pos);
+      }
+    });
+    return {
+      get: function () { return ta.value; },
+      set: function (v) { ta.value = v; errLine = 0; ta.scrollTop = 0; ta.scrollLeft = 0; refresh(); },
+      setError: function (line) { errLine = line || 0; refresh(); },
+      focus: function () { ta.focus(); }
+    };
+  }
+
+  /* ---------- running code ---------- */
+  var libs = {};
+  EXAMPLES.forEach(function (x) { libs[x.file] = x.code; });
+  function runCode(code, inputText) {
+    var input = inputText ? inputText.replace(/\r/g, '').split('\n') : [];
+    if (input.length && input[input.length - 1] === '') input.pop();
+    return K.run(code, { input: input, echoPrompts: true, maxSteps: 3000000, readFile: function (p) { if (libs[p] === undefined) throw new Error('missing'); return libs[p]; } });
+  }
+  function showResult(host, res, opts) {
+    clear(host);
+    var st = el('div', 'status ' + (res.ok ? 'ok' : 'bad'), res.ok ? 'Finished' : 'Stopped by an error');
+    host.appendChild(st);
+    if (res.output.length) { var pre = el('pre'); pre.textContent = res.output.join('\n'); host.appendChild(pre); }
+    else if (res.ok) host.appendChild(el('div', 'muted', 'Nothing was printed. Use say to show a value.'));
+    if (!res.ok) {
+      var box = el('div', 'errbox'); var ep = el('pre'); ep.textContent = res.errorText; box.appendChild(ep); host.appendChild(box);
+    }
+  }
+
+  /* ---------- markdown for lessons ---------- */
+  var blocks = [];
+  function inline(s) {
+    return s.split('`').map(function (p, i) {
+      return i % 2 ? '<code>' + esc(p) + '</code>' : esc(p).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }).join('');
+  }
+  function md(src) {
+    var lines = src.split('\n'), i = 0, out = [];
+    function special(l) { return /^```/.test(l) || /^#{2,3} /.test(l) || /^> ?/.test(l) || /^- /.test(l) || /^\d+\. /.test(l) || l.trim() === ''; }
+    while (i < lines.length) {
+      var l = lines[i], m;
+      if ((m = /^```(\w*)\s*(.*)$/.exec(l))) {
+        var body = []; i++;
+        while (i < lines.length && !/^```/.test(lines[i])) body.push(lines[i++]);
+        i++;
+        var code = body.join('\n');
+        if (m[1] === 'kes') {
+          var im = /input=(.*)/.exec(m[2]);
+          var id = blocks.length;
+          blocks.push({ code: code, input: im ? im[1].split('|').join('\n') : '' });
+          out.push('<figure class="code" data-i="' + id + '"><figcaption><span class="grow">kes' + (im ? ' &middot; input: ' + esc(im[1].split('|').join(', ')) : '') + '</span>' +
+            '<button class="btn small primary" data-act="run" type="button">Run</button>' +
+            '<button class="btn small" data-act="open" type="button">Open in Playground</button></figcaption>' +
+            '<pre><code>' + hl(code) + '</code></pre><div class="out" hidden></div></figure>');
+        } else out.push('<pre class="plain"><code>' + esc(code) + '</code></pre>');
+        continue;
+      }
+      if ((m = /^(#{2,3}) (.*)$/.exec(l))) { var h = m[1].length === 2 ? 'h3' : 'h4'; out.push('<' + h + '>' + inline(m[2]) + '</' + h + '>'); i++; continue; }
+      if (/^> ?/.test(l)) {
+        var q = [];
+        while (i < lines.length && /^> ?/.test(lines[i])) q.push(lines[i++].replace(/^> ?/, ''));
+        out.push('<blockquote><p>' + inline(q.join(' ')) + '</p></blockquote>'); continue;
+      }
+      if (/^- /.test(l) || /^\d+\. /.test(l)) {
+        var ord = /^\d+\. /.test(l), items = [], re = ord ? /^\d+\. / : /^- /;
+        while (i < lines.length && re.test(lines[i])) items.push('<li>' + inline(lines[i++].replace(re, '')) + '</li>');
+        out.push((ord ? '<ol>' : '<ul>') + items.join('') + (ord ? '</ol>' : '</ul>')); continue;
+      }
+      if (l.trim() === '') { i++; continue; }
+      var para = [];
+      while (i < lines.length && !special(lines[i])) para.push(lines[i++]);
+      out.push('<p>' + inline(para.join(' ')) + '</p>');
+    }
+    return out.join('\n');
+  }
+
+  /* ---------- Learn view ---------- */
+  var cur = 1, lessonEd, hintsShown = 0, resetArmed = null;
+  var lessonEl = $('lesson');
+
+  function lessonDefaultInput(L) {
+    var t = L.tests && L.tests[0];
+    return t && t.input ? t.input.join('\n') : '';
+  }
+  function updateProgress() {
+    var n = 0; LESSONS.forEach(function (L) { if (state.done[L.id]) n++; });
+    $('progText').textContent = n + ' / ' + LESSONS.length;
+    $('progBar').style.width = (100 * n / LESSONS.length) + '%';
+  }
+  function renderChips() {
+    var host = $('chips'); clear(host);
+    LESSONS.forEach(function (L) {
+      var a = el('a', 'chip' + (state.done[L.id] ? ' done' : ''), String(L.id));
+      a.href = '#lesson-' + L.id;
+      a.title = 'Lesson ' + L.id + ': ' + L.title + (state.done[L.id] ? ' (complete)' : '');
+      a.setAttribute('aria-label', 'Lesson ' + L.id + ': ' + L.title + (state.done[L.id] ? ', complete' : ''));
+      if (L.id === cur) a.setAttribute('aria-current', 'page');
+      host.appendChild(a);
+    });
+  }
+  function updateInputVisibility() {
+    var L = LESSONS[cur - 1];
+    var needs = /\bask\s*\(/.test(lessonEd.get()) || (L.tests || []).some(function (t) { return t.input && t.input.length; });
+    $('lInputWrap').hidden = !needs;
+  }
+  function loadLesson(id) {
+    if (!lessonEd) return;
+    cur = Math.min(Math.max(1, id), LESSONS.length);
+    var L = LESSONS[cur - 1];
+    blocks = [];
+    var html = '<p class="kicker">Lesson ' + L.id + ' of ' + LESSONS.length + '</p><h2>' + esc(L.title) + '</h2><p class="goal">' + esc(L.goal) + '</p>' +
+      '<div class="prose">' + md(L.intro) + '<section class="challenge"><h3>Your challenge</h3>' + md(L.challenge) + '<button class="btn primary jump" id="jumpBtn" type="button">Go to the editor &darr;</button></section></div>' +
+      '<div class="lessonnav">' +
+      (cur > 1 ? '<a class="btn" href="#lesson-' + (cur - 1) + '">&larr; ' + esc(LESSONS[cur - 2].title) + '</a>' : '<span></span>') +
+      (cur < LESSONS.length ? '<a class="btn" href="#lesson-' + (cur + 1) + '">' + esc(LESSONS[cur].title) + ' &rarr;</a>' : '<span></span>') + '</div>';
+    lessonEl.innerHTML = html;
+    document.title = 'Lesson ' + L.id + ' - Kestral Studio';
+    lessonEd.set(state.code[L.id] !== undefined ? state.code[L.id] : L.starter);
+    $('lInput').value = state.input[L.id] !== undefined ? state.input[L.id] : lessonDefaultInput(L);
+    clear($('lOut')); $('lOut').appendChild(el('span', 'muted', 'Press Run to see what your program prints.'));
+    clear($('lResults')); clear($('lHints')); hintsShown = 0;
+    $('lHint').textContent = L.hints.length ? 'Hint (' + L.hints.length + ')' : 'Hint';
+    $('lHint').disabled = !L.hints.length;
+    var sol = $('lSol'); sol.open = false;
+    $('lSolCode').innerHTML = '<div class="editor" style="display:block"><pre style="position:static;margin:0;padding:12px 14px;overflow:auto;font:13.5px/21px var(--mono);pointer-events:auto"><code>' + hl(L.solution.replace(/\n+$/, '')) + '</code></pre></div>';
+    updateInputVisibility();
+    renderChips();
+    $('tab-learn').href = '#lesson-' + cur;
+  }
+  function runLesson() {
+    var res = runCode(lessonEd.get(), $('lInput').value);
+    showResult($('lOut'), res);
+    lessonEd.setError(res.ok ? 0 : (res.error && res.error.line) || 0);
+    return res;
+  }
+  function checkLesson() {
+    var L = LESSONS[cur - 1], code = lessonEd.get();
+    var rows = L.tests.map(function (t) { return K.runTest(code, t); });
+    var passed = rows.filter(function (r) { return r.ok; }).length, all = passed === rows.length;
+    var host = $('lResults'); clear(host);
+    var box = el('div', 'results' + (all ? ' pass' : ''));
+    box.appendChild(el('h4', '', all ? 'Correct. Lesson ' + L.id + ' complete.' : passed + ' of ' + rows.length + ' checks passed'));
+    var ul = el('ul');
+    rows.forEach(function (r, i) {
+      var t = L.tests[i], li = el('li', r.ok ? 'ok' : 'no');
+      li.appendChild(el('b', '', r.ok ? 'Pass' : 'Fail'));
+      var label = 'Check ' + (i + 1) + (t.input && t.input.length ? ' (input: ' + t.input.join(', ') + ')' : '') + (t.append ? ' (runs extra lines after your code)' : '');
+      li.appendChild(el('span', '', label));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    if (!all) {
+      var bad = -1; rows.forEach(function (r, i) { if (bad < 0 && !r.ok) bad = i; });
+      var r = rows[bad], t = L.tests[bad];
+      if (t.append) {
+        var ran = el('div', 'ran', 'Check ' + (bad + 1) + ' ran these extra lines after your code:');
+        var rp = el('pre'); rp.textContent = t.append; ran.appendChild(rp); box.appendChild(ran);
+      }
+      if (r.crashed) {
+        var eb = el('div', 'errbox'); var ep = el('pre'); ep.textContent = r.got; eb.appendChild(ep); box.appendChild(eb);
+      } else {
+        var d = el('div', 'diff'), a = el('div'), b = el('div');
+        a.appendChild(el('div', 'h', 'Expected')); var ap = el('pre'); ap.textContent = r.expect === '' ? '(nothing)' : r.expect; a.appendChild(ap);
+        b.appendChild(el('div', 'h', 'Your output')); var bp = el('pre'); bp.textContent = r.got === '' ? '(nothing)' : r.got; b.appendChild(bp);
+        d.appendChild(a); d.appendChild(b); box.appendChild(d);
+      }
+    } else {
+      state.done[L.id] = true; save(); updateProgress(); renderChips();
+      if (cur < LESSONS.length) {
+        var nx = el('div', 'next'); var a2 = el('a', 'btn primary', 'Next: ' + LESSONS[cur].title + ' →'); a2.href = '#lesson-' + (cur + 1); nx.appendChild(a2); box.appendChild(nx);
+      } else box.appendChild(el('p', 'muted', 'You finished every lesson. The Playground and the project ideas at the end of TUTORIAL.md are your next step.'));
+    }
+    host.appendChild(box);
+  }
+  lessonEd = makeEditor($('lEditor'), {
+    label: 'Lesson code editor', minRows: 9, maxRows: 14,
+    onRun: function () { runLesson(); },
+    onChange: function (v) { state.code[cur] = v; save(); updateInputVisibility(); }
+  });
+  $('lRun').addEventListener('click', runLesson);
+  $('lCheck').addEventListener('click', checkLesson);
+  $('lInput').addEventListener('input', function () { state.input[cur] = $('lInput').value; save(); });
+  $('lHint').addEventListener('click', function () {
+    var L = LESSONS[cur - 1];
+    if (hintsShown < L.hints.length) hintsShown++;
+    var host = $('lHints'); clear(host);
+    var box = el('div', 'hintbox');
+    for (var i = 0; i < hintsShown; i++) box.appendChild(el('div', '', 'Hint ' + (i + 1) + ': ' + L.hints[i]));
+    host.appendChild(box);
+    $('lHint').textContent = hintsShown < L.hints.length ? 'Another hint (' + (L.hints.length - hintsShown) + ' left)' : 'No more hints';
+    $('lHint').disabled = hintsShown >= L.hints.length;
+  });
+  $('lReset').addEventListener('click', function () {
+    var b = $('lReset');
+    if (!resetArmed) {
+      b.textContent = 'Click again to reset';
+      resetArmed = setTimeout(function () { resetArmed = null; b.textContent = 'Reset'; }, 3000);
+      return;
+    }
+    clearTimeout(resetArmed); resetArmed = null; b.textContent = 'Reset';
+    var L = LESSONS[cur - 1];
+    delete state.code[L.id]; save();
+    lessonEd.set(L.starter);
+    clear($('lResults'));
+  });
+  lessonEl.addEventListener('click', function (e) {
+    if (e.target.closest('#jumpBtn')) { $('lEditor').scrollIntoView({ behavior: 'smooth', block: 'center' }); lessonEd.focus(); return; }
+    var b = e.target.closest('button[data-act]'); if (!b) return;
+    var fig = b.closest('figure.code'), blk = blocks[+fig.getAttribute('data-i')];
+    if (b.getAttribute('data-act') === 'run') {
+      var out = fig.querySelector('.out'); out.hidden = false;
+      showResult(out, runCode(blk.code, blk.input));
+    } else {
+      state.play = blk.code; state.playInput = blk.input; save();
+      playEd.set(blk.code); $('pInput').value = blk.input; $('pPick').value = '';
+      location.hash = '#playground';
+    }
+  });
+
+  /* ---------- Playground ---------- */
+  var WELCOME = '// Welcome to the Kestral playground.\n// Change anything, then press Run (or Ctrl+Enter).\n\nfn describe(n) {\n  give match n {\n    0 => "zero"\n    1..9 => "a single digit"\n    else => "a big number"\n  }\n}\n\nfor n in [0, 7, 42] {\n  say "{n} is {describe(n)}"\n}\n\nlet squares = 1..5 |> map(fn(x) => x * x)\nsay "Squares:", squares\n';
+  var playEd = makeEditor($('pEditor'), {
+    label: 'Playground code editor', minRows: 16, maxRows: 26,
+    onRun: function () { runPlay(); },
+    onChange: function (v) { state.play = v; save(); }
+  });
+  function runPlay() {
+    var res = runCode(playEd.get(), $('pInput').value);
+    showResult($('pOut'), res);
+    playEd.setError(res.ok ? 0 : (res.error && res.error.line) || 0);
+  }
+  var pick = $('pPick');
+  pick.appendChild(Object.assign(el('option', '', 'Your own code'), { value: '' }));
+  EXAMPLES.forEach(function (x, i) { pick.appendChild(Object.assign(el('option', '', x.title), { value: String(i) })); });
+  pick.addEventListener('change', function () {
+    if (pick.value === '') return;
+    var x = EXAMPLES[+pick.value];
+    playEd.set(x.code); $('pInput').value = x.input; state.play = x.code; state.playInput = x.input; save();
+    clear($('pOut')); $('pOut').appendChild(el('span', 'muted', 'Press Run to see what this example prints.'));
+  });
+  $('pRun').addEventListener('click', runPlay);
+  $('pCopy').addEventListener('click', function () { copyText(playEd.get(), $('pCopy')); });
+  $('pClear').addEventListener('click', function () { playEd.set(''); state.play = ''; save(); pick.value = ''; playEd.focus(); });
+  $('pInput').addEventListener('input', function () { state.playInput = $('pInput').value; save(); });
+  playEd.set(typeof state.play === 'string' ? state.play : WELCOME);
+  $('pInput').value = state.playInput || '';
+
+  /* ---------- Reference ---------- */
+  function renderRef(q) {
+    q = (q || '').toLowerCase().trim();
+    var host = $('refBody'); clear(host);
+    function has(s) { return !q || String(s).toLowerCase().indexOf(q) >= 0; }
+    var syn = REF.syntax.filter(function (s) { return has(s.title) || has(s.code) || has(s.note || ''); });
+    if (syn.length) {
+      host.appendChild(el('h3', 'group', 'Language'));
+      var grid = el('div', 'refgrid');
+      syn.forEach(function (s) {
+        var c = el('div', 'refcard');
+        c.appendChild(el('h3', '', s.title));
+        var pre = el('pre'); pre.innerHTML = '<code>' + hl(s.code) + '</code>'; c.appendChild(pre);
+        if (s.note) c.appendChild(el('p', '', s.note));
+        grid.appendChild(c);
+      });
+      host.appendChild(grid);
+    }
+    var any = syn.length > 0;
+    REF.builtins.forEach(function (g) {
+      var items = g.items.filter(function (f) { return has(f.name) || has(f.sig) || has(f.desc) || has(g.group); });
+      if (!items.length) return;
+      any = true;
+      host.appendChild(el('h3', 'group', g.group));
+      var list = el('div', 'fnlist');
+      items.forEach(function (f) {
+        var r = el('div', 'fnrow');
+        r.appendChild(el('code', '', f.sig)); r.appendChild(el('span', '', f.desc));
+        list.appendChild(r);
+      });
+      host.appendChild(list);
+    });
+    if (!any) host.appendChild(el('p', 'muted', 'Nothing matches "' + q + '". Try a shorter word.'));
+  }
+  $('refQ').addEventListener('input', function () { renderRef($('refQ').value); });
+  renderRef('');
+
+  /* ---------- theme ---------- */
+  var ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  var ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  function effTheme() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function paintTheme() {
+    var dark = effTheme() === 'dark';
+    $('themeIcon').innerHTML = dark ? ICON_SUN : ICON_MOON;
+    $('themeText').textContent = dark ? 'Light' : 'Dark';
+  }
+  if (state.theme === 'dark' || state.theme === 'light') document.documentElement.setAttribute('data-theme', state.theme);
+  $('themeBtn').addEventListener('click', function () {
+    var next = effTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    state.theme = next; save(); paintTheme();
+  });
+  if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paintTheme); } catch (e) {} }
+  paintTheme();
+
+  /* ---------- routing ---------- */
+  function route() {
+    var h = (location.hash || '').replace(/^#/, ''), m;
+    var view = 'learn';
+    if (h === 'playground') view = 'play';
+    else if (h === 'reference') view = 'ref';
+    else if ((m = /^lesson-(\d+)$/.exec(h))) cur = +m[1];
+    else {
+      var first = LESSONS.filter(function (L) { return !state.done[L.id]; })[0];
+      cur = first ? first.id : 1;
+    }
+    $('v-learn').hidden = view !== 'learn';
+    $('v-play').hidden = view !== 'play';
+    $('v-ref').hidden = view !== 'ref';
+    ['learn', 'play', 'ref'].forEach(function (v) {
+      var a = $('tab-' + v);
+      if (v === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    if (view === 'learn') {
+      var id = Math.min(Math.max(1, cur), LESSONS.length);
+      if (!lessonEl.firstChild || lessonEl.getAttribute('data-id') !== String(id)) {
+        loadLesson(id); lessonEl.setAttribute('data-id', String(id));
+        if (window.scrollTo) window.scrollTo(0, 0);
+      }
+    } else {
+      document.title = view === 'play' ? 'Playground - Kestral Studio' : 'Reference - Kestral Studio';
+      if (window.scrollTo) window.scrollTo(0, 0);
+    }
+  }
+  window.addEventListener('hashchange', route);
+  updateProgress();
+  route();
+})();
+</script>
+
+</body>
+</html>
